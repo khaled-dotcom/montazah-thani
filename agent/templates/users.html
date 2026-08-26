@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty_state %}
+
+{% block title %}المستخدمون — {{ org_name }}{% endblock %}
+{% block topbar_title %}المستخدمون{% endblock %}
+{% block topbar_sub %}موظفو الأحياء ومديرو النظام{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('create_user') }}" class="btn btn-primary btn-sm">
+    <i data-lucide="user-plus"></i> إضافة مستخدم
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  {% if users %}
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr><th>اسم المستخدم</th><th>نطاق الصلاحية</th><th>إجراءات</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td><strong>{{ u.username }}</strong></td>
+          <td>
+            {% if u.district %}
+              {{ u.district.name }}
+            {% else %}
+              <span class="status-badge status-confirmed">كل الأحياء</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('edit_user', user_id=u.id) }}" class="btn btn-sm btn-ghost">
+              <i data-lucide="pencil"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {{ empty_state('users', 'لا يوجد مستخدمون') }}
+  {% endif %}
+</div>
+
+<div class="alert-card alert-orange" style="margin-top:20px">
+  <div class="alert-icon"><i data-lucide="info"></i></div>
+  <div>
+    موظف مربوط بحي بيشوف بلاغات ومواعيد حيه بس. سيب الحي فاضي عشان يبقى مدير عام
+    يشوف كل الأحياء.
+  </div>
+</div>
+{% endblock %}

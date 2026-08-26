@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, empty_state %}
+
+{% block title %}لوحة التحكم — {{ org_name }}{% endblock %}
+{% block topbar_title %}لوحة التحكم{% endblock %}
+{% block topbar_sub %}نظرة عامة على البلاغات والمواعيد ونشاط المساعد{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('chat_page') }}" target="_blank" class="btn btn-outline btn-sm">
+    <i data-lucide="message-circle"></i> معاينة الشات
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── الإحصائيات ─────────────────────────────────────────── -->
+<div class="stats-grid">
+
+  <div class="stat-card stat-card-hover">
+    <div class="stat-icon bg-amber"><i data-lucide="megaphone"></i></div>
+    <div class="stat-details">
+      <div class="stat-label">بلاغات قيد الاستلام</div>
+      <div class="stat-value">{{ complaint_stats.pending }}</div>
+      <div class="stat-sub">من إجمالي {{ complaint_stats.total }} بلاغ</div>
+    </div>
+  </div>
+
+  <div class="stat-card stat-card-hover">
+    <div class="stat-icon bg-blue"><i data-lucide="loader"></i></div>
+    <div class="stat-details">
+      <div class="stat-label">جاري المعالجة</div>
+      <div class="stat-value">{{ complaint_stats.in_progress }}</div>
+      <div class="stat-sub">تم تحويلها للإدارات</div>
+    </div>
+  </div>
+
+  <div class="stat-card stat-card-hover">
+    <div class="stat-icon bg-green"><i data-lucide="check-circle-2"></i></div>
+    <div class="stat-details">
+      <div class="stat-label">بلاغات تم حلها</div>
+      <div class="stat-value">{{ complaint_stats.resolved }}</div>
+      <div class="stat-sub">
+        {% if complaint_stats.total %}
+          {{ ((complaint_stats.resolved / complaint_stats.total) * 100) | round(1) }}% من الإجمالي
+        {% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-card stat-card-hover">
+    <div class="stat-icon bg-purple"><i data-lucide="calendar-check"></i></div>
+    <div class="stat-details">
+      <div class="stat-label">مواعيد في الانتظار</div>
+      <div class="stat-value">{{ appointment_stats.pending }}</div>
+      <div class="stat-sub">من إجمالي {{ appointment_stats.total }} موعد</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── نشاط المساعد ───────────────────────────────────────── -->
+<div class="card" style="margin-top:22px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="activity"></i> نشاط المساعد — آخر ٧ أيام</h2>
+  </div>
+  <div class="info-grid">
+    <div class="info-item">
+      <div class="info-icon si-blue"><i data-lucide="users"></i></div>
+      <div class="info-body">
+        <div class="info-label">محادثات جديدة</div>
+        <div class="info-value">{{ chat_sessions_week }}</div>
+      </div>
+    </div>
+    <div class="info-item">
+      <div class="info-icon si-purple"><i data-lucide="message-square"></i></div>
+      <div class="info-body">
+        <div class="info-label">رسائل متبادلة</div>
+        <div class="info-value">{{ messages_week }}</div>
+      </div>
+    </div>
+    <div class="info-item">
+      <div class="info-icon si-green"><i data-lucide="building-2"></i></div>
+      <div class="info-body">
+        <div class="info-label">الأحياء المسجلة</div>
+        <div class="info-value">{{ districts_count }}</div>
+      </div>
+    </div>
+    <div class="info-item">
+      <div class="info-icon si-amber"><i data-lucide="clipboard-list"></i></div>
+      <div class="info-body">
+        <div class="info-label">الخدمات المسجلة</div>
+        <div class="info-value">{{ services_count }}</div>
+      </div>
+    </div>
+    <div class="info-item">
+      <div class="info-icon si-blue"><i data-lucide="wallet"></i></div>
+      <div class="info-body">
+        <div class="info-label">تكلفة التشغيل</div>
+        <div class="info-value">${{ '%.4f'|format(cost_week) }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if districts_count == 0 or services_count == 0 %}
+<div class="alert-card alert-orange" style="margin-top:22px">
+  <div class="alert-icon"><i data-lucide="alert-triangle"></i></div>
+  <div>
+    <strong>المساعد ناقصه بيانات.</strong><br>
+    {% if districts_count == 0 %}
+      مفيش أحياء مسجلة — شغّل <code>flask seed-districts --with-services</code> أو ضيفها من
+      <a href="{{ url_for('list_districts') }}">صفحة الأحياء</a>.
+    {% else %}
+      مفيش خدمات مسجلة — ضيفها من <a href="{{ url_for('list_services') }}">صفحة الخدمات</a>
+      عشان المساعد يقدر يجاوب على الأوراق والرسوم.
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── تصنيف البلاغات ─────────────────────────────────────── -->
+{% if category_breakdown %}
+<div class="card" style="margin-top:22px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="pie-chart"></i> البلاغات حسب النوع</h2>
+  </div>
+  <div style="padding:6px 20px 20px">
+    {% set max_count = category_breakdown[0].count %}
+    {% for row in category_breakdown %}
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:6px">
+          <span style="font-weight:600">{{ row.category }}</span>
+          <span style="color:var(--text-muted)">{{ row.count }}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar progress-green"
+               style="width: {{ (row.count / max_count * 100) | round(1) }}%"></div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── أحدث البلاغات والمواعيد ────────────────────────────── -->
+<div class="settings-grid" style="margin-top:22px">
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i data-lucide="megaphone"></i> أحدث البلاغات</h2>
+      <a href="{{ url_for('list_complaints') }}" class="btn btn-sm btn-ghost">عرض الكل</a>
+    </div>
+    {% if recent_complaints %}
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr><th>الرقم</th><th>النوع</th><th>الحي</th><th>الحالة</th></tr>
+        </thead>
+        <tbody>
+          {% for c in recent_complaints %}
+          <tr onclick="location.href='{{ url_for('complaint_detail', complaint_id=c.id) }}'"
+              style="cursor:pointer">
+            <td><strong>{{ c.reference_id }}</strong></td>
+            <td>{{ c.category.value if c.category else '—' }}</td>
+            <td>{{ c.district.name if c.district else '—' }}</td>
+            <td>{{ status_badge(c.status) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      {{ empty_state('inbox', 'لا توجد بلاغات بعد') }}
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i data-lucide="calendar-check"></i> أحدث المواعيد</h2>
+      <a href="{{ url_for('list_appointments') }}" class="btn btn-sm btn-ghost">عرض الكل</a>
+    </div>
+    {% if recent_appointments %}
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr><th>الرقم</th><th>المواطن</th><th>الموعد</th><th>الحالة</th></tr>
+        </thead>
+        <tbody>
+          {% for a in recent_appointments %}
+          <tr onclick="location.href='{{ url_for('appointment_detail', appointment_id=a.id) }}'"
+              style="cursor:pointer">
+            <td><strong>{{ a.reference_id }}</strong></td>
+            <td>{{ a.name }}</td>
+            <td>{{ a.date or '—' }}</td>
+            <td>{{ status_badge(a.status) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      {{ empty_state('calendar-x', 'لا توجد مواعيد بعد') }}
+    {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}

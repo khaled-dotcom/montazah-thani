@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, status_label, transcript, delete_form %}
+
+{% block title %}موعد {{ appointment.reference_id }} — {{ org_name }}{% endblock %}
+{% block topbar_title %}موعد {{ appointment.reference_id }}{% endblock %}
+{% block topbar_sub %}{{ appointment.name }}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('edit_appointment', appointment_id=appointment.id) }}" class="btn btn-outline btn-sm">
+    <i data-lucide="pencil"></i> تعديل
+  </a>
+  <a href="{{ url_for('list_appointments') }}" class="btn btn-ghost btn-sm">
+    <i data-lucide="arrow-right"></i> رجوع
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="settings-grid">
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i data-lucide="calendar-check"></i> تفاصيل الموعد</h2>
+      {{ status_badge(appointment.status) }}
+    </div>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">رقم الموعد</div>
+          <div class="info-value">{{ appointment.reference_id }}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">اسم المواطن</div>
+          <div class="info-value">{{ appointment.name }}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">رقم التواصل</div>
+          <div class="info-value">
+            <a href="tel:{{ appointment.phone_number }}">{{ appointment.phone_number }}</a>
+          </div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">الرقم القومي</div>
+          <div class="info-value">{{ appointment.national_id or '—' }}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">الإيميل</div>
+          <div class="info-value">
+            {% if appointment.email %}
+              <a href="mailto:{{ appointment.email }}">{{ appointment.email }}</a>
+              <div style="font-size:.75rem;color:#10b981;font-weight:600;margin-top:3px">
+                ✓ بيستقبل تحديثات الحالة
+              </div>
+            {% else %}
+              <span style="color:var(--text-muted)">— لم يُسجَّل</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">الحي</div>
+          <div class="info-value">{{ appointment.district.name if appointment.district else 'غير محدد' }}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">الموعد</div>
+          <div class="info-value">{{ appointment.date or '—' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:0 20px 20px">
+      <div class="info-label" style="margin-bottom:6px">الخدمة المطلوبة</div>
+      <p style="line-height:1.9">{{ appointment.details or '—' }}</p>
+
+      {% if appointment.service and appointment.service.required_documents %}
+        <div class="info-label" style="margin:18px 0 6px">الأوراق المطلوبة للخدمة</div>
+        <p style="line-height:1.9;white-space:pre-wrap">{{ appointment.service.required_documents }}</p>
+      {% endif %}
+
+      {% if appointment.staff_note %}
+        <div class="info-label" style="margin:18px 0 6px">ملاحظة الموظف</div>
+        <p style="line-height:1.9;white-space:pre-wrap">{{ appointment.staff_note }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title"><i data-lucide="settings-2"></i> تحديث الحالة</h2>
+      </div>
+      <form method="POST" action="{{ url_for('update_appointment_status', appointment_id=appointment.id) }}"
+            style="padding:20px">
+        <div class="form-group">
+          <label class="form-label" for="status">الحالة</label>
+          <select id="status" name="status" class="form-control">
+            {% for s in statuses %}
+              <option value="{{ s.value }}" {{ 'selected' if appointment.status == s }}>
+                {{ status_label(s.value) }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="staff_note">ملاحظة (تظهر للمواطن عند المتابعة)</label>
+          <textarea id="staff_note" name="staff_note" class="form-control">{{ appointment.staff_note or '' }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          <i data-lucide="check"></i> حفظ
+        </button>
+      </form>
+    </div>
+
+    <div class="danger-zone" style="margin-top:20px">
+      <div class="danger-zone-header">
+        <div class="danger-zone-icon"><i data-lucide="alert-triangle"></i></div>
+        <div>
+          <div class="danger-zone-title">حذف الموعد</div>
+          <div class="danger-zone-sub">لا يمكن التراجع بعد الحذف</div>
+        </div>
+      </div>
+      <div class="danger-zone-actions">
+        {{ delete_form(url_for('delete_appointment', appointment_id=appointment.id)) }}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="card" style="margin-top:22px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="messages-square"></i> المحادثة الأصلية</h2>
+    {% if appointment.session_id %}
+      <a href="{{ url_for('conversation_detail', session_id=appointment.session_id) }}"
+         class="btn btn-sm btn-ghost">فتح الجلسة</a>
+    {% endif %}
+  </div>
+  <div style="padding:20px">
+    {{ transcript(chat_messages) }}
+  </div>
+</div>
+
+{% endblock %}

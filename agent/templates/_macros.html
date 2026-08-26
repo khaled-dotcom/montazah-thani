@@ -1,0 +1,109 @@
+{# ── مكوّنات متكررة في لوحة التحكم ─────────────────────────────────────── #}
+
+{% macro status_badge(status) %}
+  {% set value = status.value if status else '' %}
+  {% set css = {
+      'Pending':     'status-pending',
+      'In Progress': 'status-in-progress',
+      'Resolved':    'status-resolved',
+      'Rejected':    'status-rejected',
+      'Confirmed':   'status-confirmed',
+      'Attended':    'status-attended',
+      'No Show':     'status-noshow',
+      'Cancelled':   'status-cancelled',
+  } %}
+  {% set label = {
+      'Pending':     'قيد الاستلام',
+      'In Progress': 'جاري المعالجة',
+      'Resolved':    'تم الحل',
+      'Rejected':    'خارج الاختصاص',
+      'Confirmed':   'مؤكد',
+      'Attended':    'حضر',
+      'No Show':     'لم يحضر',
+      'Cancelled':   'ملغي',
+  } %}
+  <span class="status-badge {{ css.get(value, 'status-pending') }}">
+    {{ label.get(value, value or '—') }}
+  </span>
+{% endmacro %}
+
+
+{% macro status_label(value) %}
+  {{- {
+      'Pending':     'قيد الاستلام',
+      'In Progress': 'جاري المعالجة',
+      'Resolved':    'تم الحل',
+      'Rejected':    'خارج الاختصاص',
+      'Confirmed':   'مؤكد',
+      'Attended':    'حضر',
+      'No Show':     'لم يحضر',
+      'Cancelled':   'ملغي',
+  }.get(value, value) -}}
+{% endmacro %}
+
+
+{# الاسم "pager" مش "pagination" عن قصد: الراوتس بتمرّر متغيّر اسمه
+   pagination، ولو الماكرو اتسمّى زيه بيحجبه وكل الجداول بتطلع فاضية. #}
+{% macro pager(pagination_obj, endpoint, extra={}) %}
+  {% if pagination_obj and pagination_obj.pages > 1 %}
+  <nav class="pagination">
+    {% if pagination_obj.has_prev %}
+      <a href="{{ url_for(endpoint, page=pagination_obj.prev_num, **extra) }}">السابق</a>
+    {% endif %}
+
+    {% for p in pagination_obj.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
+      {% if p %}
+        {% if p == pagination_obj.page %}
+          <span class="current">{{ p }}</span>
+        {% else %}
+          <a href="{{ url_for(endpoint, page=p, **extra) }}">{{ p }}</a>
+        {% endif %}
+      {% else %}
+        <span>…</span>
+      {% endif %}
+    {% endfor %}
+
+    {% if pagination_obj.has_next %}
+      <a href="{{ url_for(endpoint, page=pagination_obj.next_num, **extra) }}">التالي</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+{% endmacro %}
+
+
+{% macro empty_state(icon, title, subtitle='') %}
+  <div class="empty-state">
+    <i data-lucide="{{ icon }}" class="empty-state-icon"></i>
+    <div class="empty-state-title">{{ title }}</div>
+    {% if subtitle %}<div>{{ subtitle }}</div>{% endif %}
+  </div>
+{% endmacro %}
+
+
+{% macro delete_form(action, label='حذف') %}
+  <form method="POST" action="{{ action }}" style="display:inline"
+        onsubmit="event.preventDefault(); confirmDelete(this);">
+    <button type="submit" class="btn btn-sm btn-danger" title="{{ label }}">
+      <i data-lucide="trash-2"></i>
+    </button>
+  </form>
+{% endmacro %}
+
+
+{% macro transcript(messages) %}
+  {% if messages %}
+    <div class="transcript">
+      {% for message in messages %}
+        <div class="transcript-msg {{ message.role }}">
+          {{ message.content }}
+          <div class="transcript-meta">
+            {{ 'المواطن' if message.role == 'user' else 'المساعد' }}
+            · {{ message.created_at.strftime('%Y-%m-%d %H:%M') if message.created_at else '' }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="transcript-empty">لا توجد رسائل محفوظة لهذه الجلسة.</div>
+  {% endif %}
+{% endmacro %}

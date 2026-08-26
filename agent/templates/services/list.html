@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pager, empty_state, delete_form %}
+
+{% block title %}الخدمات والمعاملات — {{ org_name }}{% endblock %}
+{% block topbar_title %}الخدمات والمعاملات{% endblock %}
+{% block topbar_sub %}المصدر الوحيد اللي المساعد بيجاوب منه على الأوراق والرسوم{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('create_service') }}" class="btn btn-primary btn-sm">
+    <i data-lucide="plus"></i> إضافة خدمة
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+  <div class="toolbar">
+    <form method="GET" class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" name="search" class="search-input"
+             placeholder="ابحث باسم الخدمة أو الإدارة..."
+             value="{{ search }}">
+    </form>
+
+    <form method="GET" class="toolbar-filters">
+      <input type="hidden" name="search" value="{{ search }}">
+      <select name="district" class="form-control" onchange="this.form.submit()">
+        <option value="">كل الأحياء</option>
+        {% for d in districts %}
+          <option value="{{ d.id }}" {{ 'selected' if request.args.get('district')|int == d.id }}>
+            {{ d.name }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <select name="category" class="form-control" onchange="this.form.submit()">
+        <option value="">كل التصنيفات</option>
+        {% for c in categories %}
+          <option value="{{ c }}" {{ 'selected' if request.args.get('category') == c }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  {% if pagination and pagination.items %}
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>الخدمة</th>
+          <th>التصنيف</th>
+          <th>الحي</th>
+          <th>الرسوم</th>
+          <th>الأوراق</th>
+          <th>حجز موعد</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in pagination.items %}
+        <tr>
+          <td><strong>{{ s.name }}</strong></td>
+          <td>{{ s.category or '—' }}</td>
+          <td>{{ s.district.name if s.district else 'كل الأحياء' }}</td>
+          <td>
+            {% if s.fees is not none %}
+              {{ s.fees | round(2) }} جنيه
+            {% else %}
+              <span class="field-missing">⚠ غير محددة</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if s.required_documents %}
+              <i data-lucide="check" style="color:#10b981;width:17px"></i>
+            {% else %}
+              <span class="field-missing">⚠ فارغة</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="status-badge {{ 'status-resolved' if s.is_bookable else 'status-rejected' }}">
+              {{ 'متاح' if s.is_bookable else 'غير متاح' }}
+            </span>
+          </td>
+          <td>
+            <a href="{{ url_for('edit_service', service_id=s.id) }}"
+               class="btn btn-sm btn-ghost" title="تعديل">
+              <i data-lucide="pencil"></i>
+            </a>
+            <a href="{{ url_for('review_knowledge', target='service', entity_id=s.id) }}"
+               class="btn btn-sm btn-outline" title="توليد وصف للبحث الذكي">
+              <i data-lucide="sparkles"></i>
+            </a>
+            {{ delete_form(url_for('delete_service', service_id=s.id)) }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {{ pager(pagination, 'list_services', {'search': search}) }}
+
+  {% else %}
+    {{ empty_state('clipboard-list', 'لا توجد خدمات مسجلة',
+                   'من غير خدمات، المساعد هيرد على كل استعلام بأنه لا يملك المعلومة.') }}
+  {% endif %}
+
+</div>
+
+<div class="alert-card alert-orange" style="margin-top:20px">
+  <div class="alert-icon"><i data-lucide="shield-check"></i></div>
+  <div>
+    <strong>المساعد لا يخترع بيانات.</strong>
+    لو الرسوم أو الأوراق فاضية، هيقول للمواطن إنه ملقاش المعلومة ويوجّهه للحي —
+    ومش هيخمّن رقم. علامة ⚠ فوق معناها الخدمة دي محتاجة استكمال.
+  </div>
+</div>
+
+{% endblock %}

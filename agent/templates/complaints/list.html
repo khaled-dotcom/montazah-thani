@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, status_label, pager, empty_state %}
+
+{% block title %}البلاغات — {{ org_name }}{% endblock %}
+{% block topbar_title %}البلاغات والشكاوى{% endblock %}
+{% block topbar_sub %}كل بلاغ وصل من الشات، مرتّب من الأحدث{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+  <div class="toolbar">
+    <form method="GET" class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" name="search" class="search-input"
+             placeholder="ابحث برقم البلاغ أو الاسم أو التليفون أو العنوان..."
+             value="{{ search }}">
+    </form>
+
+    <form method="GET" class="toolbar-filters">
+      <input type="hidden" name="search" value="{{ search }}">
+
+      <select name="status" class="form-control" onchange="this.form.submit()">
+        <option value="">كل الحالات</option>
+        {% for s in statuses %}
+          <option value="{{ s.value }}" {{ 'selected' if request.args.get('status') == s.value }}>
+            {{ status_label(s.value) }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <select name="category" class="form-control" onchange="this.form.submit()">
+        <option value="">كل الأنواع</option>
+        {% for c in categories %}
+          <option value="{{ c.value }}" {{ 'selected' if request.args.get('category') == c.value }}>
+            {{ c.value }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <select name="district" class="form-control" onchange="this.form.submit()">
+        <option value="">كل الأحياء</option>
+        {% for d in districts %}
+          <option value="{{ d.id }}" {{ 'selected' if request.args.get('district')|int == d.id }}>
+            {{ d.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  {% if pagination and pagination.items %}
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>رقم البلاغ</th>
+          <th>النوع</th>
+          <th>الحي</th>
+          <th>المكان</th>
+          <th>المواطن</th>
+          <th>التاريخ</th>
+          <th>الحالة</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in pagination.items %}
+        <tr onclick="location.href='{{ url_for('complaint_detail', complaint_id=c.id) }}'"
+            style="cursor:pointer">
+          <td><strong>{{ c.reference_id }}</strong></td>
+          <td>{{ c.category.value if c.category else '—' }}</td>
+          <td>
+            {% if c.district %}{{ c.district.name }}
+            {% else %}<span class="field-missing">غير محدد</span>{% endif %}
+          </td>
+          <td>{{ c.address|truncate(45) if c.address else '—' }}</td>
+          <td>
+            {{ c.citizen_name or '—' }}
+            <div style="color:var(--text-muted);font-size:.82rem">{{ c.phone_number }}</div>
+          </td>
+          <td>{{ c.created_at.strftime('%Y-%m-%d') if c.created_at else '—' }}</td>
+          <td>{{ status_badge(c.status) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {{ pager(pagination, 'list_complaints', {'search': search}) }}
+
+  {% else %}
+    {{ empty_state('inbox', 'لا توجد بلاغات مطابقة') }}
+  {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل {{ district.name }} — {{ org_name }}{% endblock %}
+{% block topbar_title %}تعديل {{ district.name }}{% endblock %}
+{% block topbar_sub %}أي خانة فاضية، المساعد مش هيذكرها للمواطن ومش هيخترعها{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('review_knowledge', target='district', entity_id=district.id) }}"
+     class="btn btn-outline btn-sm">
+    <i data-lucide="sparkles"></i> توليد وصف للبحث الذكي
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="POST" style="padding:24px">
+    {% include "districts/_form.html" %}
+
+    <div style="display:flex;gap:10px;margin-top:24px">
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="save"></i> حفظ التعديلات
+      </button>
+      <a href="{{ url_for('list_districts') }}" class="btn btn-ghost">رجوع</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

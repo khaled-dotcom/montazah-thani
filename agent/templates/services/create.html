@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}إضافة خدمة — {{ org_name }}{% endblock %}
+{% block topbar_title %}إضافة خدمة{% endblock %}
+{% block topbar_sub %}المساعد هيجاوب المواطنين من البيانات دي بالظبط{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="POST" style="padding:24px">
+    {% set service = None %}
+    {% include "services/_form.html" %}
+
+    <div style="display:flex;gap:10px;margin-top:24px">
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="save"></i> حفظ الخدمة
+      </button>
+      <a href="{{ url_for('list_services') }}" class="btn btn-ghost">إلغاء</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

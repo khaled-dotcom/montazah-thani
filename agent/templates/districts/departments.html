@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty_state, delete_form %}
+
+{% block title %}إدارات {{ district.name }} — {{ org_name }}{% endblock %}
+{% block topbar_title %}الإدارات المختصة — {{ district.name }}{% endblock %}
+{% block topbar_sub %}البلاغ بيتحوّل أوتوماتيك للإدارة حسب نوع الشكوى{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('list_districts') }}" class="btn btn-ghost btn-sm">
+    <i data-lucide="arrow-right"></i> رجوع
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="alert-card alert-orange">
+  <div class="alert-icon"><i data-lucide="git-branch"></i></div>
+  <div>
+    <strong>ازاي التحويل بيشتغل:</strong>
+    المساعد بيستنتج نوع الشكوى من كلام المواطن (قمامة / صرف / إنارة...)، وأول ما
+    البلاغ يتسجّل بيتحوّل للإدارة المسؤولة عن النوع ده في الحي ده.
+    ولو حطيت إيميل للإدارة، بيوصلها البلاغ فورًا من غير ما تفتح الداشبورد.
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="building"></i> الإدارات ({{ departments|length }})</h2>
+    {% if departments|length < categories|length %}
+    <form method="POST" style="display:inline">
+      <input type="hidden" name="action" value="seed">
+      <button type="submit" class="btn btn-sm btn-outline">
+        <i data-lucide="wand-2"></i> إنشاء الإدارات الافتراضية
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if departments %}
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>نوع الشكوى</th>
+          <th>الإدارة</th>
+          <th>المسؤول</th>
+          <th>التليفون</th>
+          <th>الإيميل</th>
+          <th>الإشعار</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in departments %}
+        <tr>
+          <td><strong>{{ d.category.value }}</strong></td>
+          <td>{{ d.name }}</td>
+          <td>{{ d.manager or '—' }}</td>
+          <td>{{ d.phone or '—' }}</td>
+          <td>{{ d.email or '—' }}</td>
+          <td>
+            {% if d.email %}
+              <span class="status-badge status-resolved">يوصلها إيميل</span>
+            {% else %}
+              <span class="field-missing">⚠ الداشبورد فقط</span>
+            {% endif %}
+          </td>
+          <td>{{ delete_form(url_for('delete_department', department_id=d.id)) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {{ empty_state('building', 'لا توجد إدارات لهذا الحي',
+                   'من غيرها البلاغات هتوصل الداشبورد من غير تحويل.') }}
+  {% endif %}
+</div>
+
+<div class="card" style="margin-top:20px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="plus"></i> إضافة أو تعديل إدارة</h2>
+  </div>
+  <form method="POST" style="padding:24px">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="category">نوع الشكوى *</label>
+        <select id="category" name="category" class="form-control" required>
+          {% for c in categories %}
+            <option value="{{ c.value }}">{{ c.value }}</option>
+          {% endfor %}
+        </select>
+        <p class="form-hint">لو النوع ده ليه إدارة بالفعل، هيتم تحديثها.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="name">اسم الإدارة *</label>
+        <input type="text" id="name" name="name" class="form-control" required
+               placeholder="إدارة النظافة والتجميل">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="manager">المسؤول</label>
+        <input type="text" id="manager" name="manager" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="phone">التليفون</label>
+        <input type="text" id="phone" name="phone" class="form-control">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="email">إيميل الإدارة</label>
+      <input type="email" id="email" name="email" class="form-control">
+      <p class="form-hint">
+        لو اتملى، كل بلاغ جديد من النوع ده هيوصلها فورًا ببيانات المواطن والمكان.
+      </p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <input type="checkbox" name="is_active" value="1" checked>
+        الإدارة نشطة وتستقبل بلاغات
+      </label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      <i data-lucide="save"></i> حفظ
+    </button>
+  </form>
+</div>
+
+{% endblock %}

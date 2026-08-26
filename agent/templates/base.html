@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ org_name }} — لوحة التحكم{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="فتح القائمة">
+  <i data-lucide="menu"></i>
+</button>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ── SIDEBAR ─────────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+
+  <div class="sidebar-header">
+    <div class="brand-badge">
+      <div class="brand-logo">🏛️</div>
+      <div>
+        <div class="lab-name">{{ org_name }}</div>
+        <div class="lab-sub">مساعد خدمة المواطن</div>
+      </div>
+    </div>
+    <div class="sidebar-status">
+      <span class="status-pulse"></span>
+      النظام نشط
+    </div>
+  </div>
+
+  <nav class="nav-section">
+
+    <p class="nav-section-label">المتابعة اليومية</p>
+
+    <a href="{{ url_for('dashboard') }}"
+       class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+      <i data-lucide="layout-dashboard" class="nav-icon"></i>
+      لوحة التحكم
+    </a>
+
+    <a href="{{ url_for('list_complaints') }}"
+       class="nav-item {% if request.endpoint in ['list_complaints','complaint_detail'] %}active{% endif %}">
+      <i data-lucide="megaphone" class="nav-icon"></i>
+      البلاغات والشكاوى
+      {% if pending_complaints_count and pending_complaints_count > 0 %}
+      <span class="nav-badge">{{ pending_complaints_count }}</span>
+      {% endif %}
+    </a>
+
+    <a href="{{ url_for('list_appointments') }}"
+       class="nav-item {% if request.endpoint in ['list_appointments','appointment_detail','create_appointment','edit_appointment'] %}active{% endif %}">
+      <i data-lucide="calendar-check" class="nav-icon"></i>
+      المواعيد
+      {% if pending_appointments_count and pending_appointments_count > 0 %}
+      <span class="nav-badge">{{ pending_appointments_count }}</span>
+      {% endif %}
+    </a>
+
+    <a href="{{ url_for('list_conversations') }}"
+       class="nav-item {% if request.endpoint in ['list_conversations','conversation_detail'] %}active{% endif %}">
+      <i data-lucide="messages-square" class="nav-icon"></i>
+      المحادثات
+    </a>
+
+    <p class="nav-section-label">البيانات المرجعية</p>
+
+    <a href="{{ url_for('list_districts') }}"
+       class="nav-item {% if request.endpoint in ['list_districts','create_district','edit_district'] %}active{% endif %}">
+      <i data-lucide="building-2" class="nav-icon"></i>
+      الأحياء
+    </a>
+
+    <a href="{{ url_for('list_services') }}"
+       class="nav-item {% if request.endpoint in ['list_services','create_service','edit_service'] %}active{% endif %}">
+      <i data-lucide="clipboard-list" class="nav-icon"></i>
+      الخدمات والمعاملات
+    </a>
+
+    <p class="nav-section-label">الإعدادات</p>
+
+    <a href="{{ url_for('embed_instructions') }}"
+       class="nav-item {% if request.endpoint == 'embed_instructions' %}active{% endif %}">
+      <i data-lucide="code-2" class="nav-icon"></i>
+      تركيب الشات على الموقع
+    </a>
+
+    <a href="{{ url_for('chat_page') }}" target="_blank" class="nav-item">
+      <i data-lucide="external-link" class="nav-icon"></i>
+      معاينة الشات
+    </a>
+
+    <a href="{{ url_for('users') }}"
+       class="nav-item {% if request.endpoint in ['users','create_user','edit_user'] %}active{% endif %}">
+      <i data-lucide="users" class="nav-icon"></i>
+      المستخدمون
+    </a>
+
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar">{{ current_user.username[0]|upper if current_user.is_authenticated and current_user.username else 'A' }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ current_user.username if current_user.is_authenticated else 'Admin' }}</div>
+        <div class="user-role">
+          {% if current_user.is_authenticated and current_user.district %}
+            {{ current_user.district.name }}
+          {% else %}
+            مدير عام
+          {% endif %}
+        </div>
+      </div>
+      <a href="{{ url_for('logout') }}" class="logout-btn" title="تسجيل الخروج">
+        <i data-lucide="log-out"></i>
+      </a>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ── FLASH MESSAGES ──────────────────────────────────────── -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash-msg flash-{{ category }}">
+          <div class="flash-content">
+            <i data-lucide="info" class="flash-icon"></i>
+            <span>{{ message }}</span>
+          </div>
+          <button class="flash-close" onclick="this.parentElement.remove()">&#10005;</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- ── DELETE MODAL ───────────────────────────────────────── -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-icon text-danger">
+      <i data-lucide="trash-2"></i>
+    </div>
+    <h3 class="modal-title">تأكيد الحذف</h3>
+    <p class="modal-body">
+      هل أنت متأكد من حذف هذا العنصر؟<br>
+      لا يمكن التراجع عن هذا الإجراء بعد إتمامه.
+    </p>
+    <div class="modal-actions">
+      <button onclick="closeDeleteModal()" class="btn btn-ghost">إلغاء</button>
+      <button id="confirmDeleteBtn" class="btn btn-danger">تأكيد الحذف</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN WRAPPER ───────────────────────────────────────── -->
+<div class="main-wrapper">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1 class="topbar-title">{% block topbar_title %}{% endblock %}</h1>
+      <p class="topbar-sub">{% block topbar_sub %}{% endblock %}</p>
+    </div>
+    <div class="topbar-actions">
+      {% block topbar_actions %}{% endblock %}
+    </div>
+  </header>
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <span>{{ org_name }} — مساعد خدمة المواطن &copy; {{ current_year }}</span>
+  </footer>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide) lucide.createIcons();
+  });
+
+  /* ── Sidebar mobile toggle ── */
+  const sidebar        = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  const sidebarToggle  = document.getElementById('sidebarToggle');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    sidebarOverlay.classList.add('open');
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    sidebarOverlay.classList.remove('open');
+  }
+
+  if (sidebarToggle) sidebarToggle.addEventListener('click', openSidebar);
+  if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+
+  /* ── Delete modal ── */
+  let _pendingForm = null;
+
+  function confirmDelete(form) {
+    _pendingForm = form;
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+      modal.classList.add('open');
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+
+  function closeDeleteModal() {
+    _pendingForm = null;
+    const modal = document.getElementById('deleteModal');
+    if (modal) modal.classList.remove('open');
+  }
+
+  const confirmBtn = document.getElementById('confirmDeleteBtn');
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', function () {
+      if (_pendingForm) _pendingForm.submit();
+    });
+  }
+
+  const deleteModal = document.getElementById('deleteModal');
+  if (deleteModal) {
+    deleteModal.addEventListener('click', function (e) {
+      if (e.target === this) closeDeleteModal();
+    });
+  }
+
+  /* ── Auto-dismiss flash messages ── */
+  setTimeout(() => {
+    document.querySelectorAll('.flash-msg').forEach(el => {
+      el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-10px)';
+      setTimeout(() => el.remove(), 400);
+    });
+  }, 4500);
+</script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

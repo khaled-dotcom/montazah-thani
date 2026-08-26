@@ -1,0 +1,54 @@
+{# حقول الموعد — مشتركة بين الحجز اليدوي والتعديل. `appointment` ممكن تكون None #}
+
+<div class="form-row">
+  <div class="form-group">
+    <label class="form-label" for="name">اسم المواطن *</label>
+    <input type="text" id="name" name="name" class="form-control" required
+           value="{{ appointment.name if appointment else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="phone_number">رقم التواصل *</label>
+    <input type="text" id="phone_number" name="phone_number" class="form-control" required
+           value="{{ appointment.phone_number if appointment else '' }}">
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="form-label" for="email">الإيميل</label>
+  <input type="email" id="email" name="email" class="form-control"
+         value="{{ appointment.email if appointment else '' }}">
+  <p class="form-hint">اختياري — لو اتسجّل، المواطن هيستقبل تأكيد الموعد وأي تحديث على حالته.</p>
+</div>
+
+<div class="form-row">
+  <div class="form-group">
+    <label class="form-label" for="national_id">الرقم القومي</label>
+    <input type="text" id="national_id" name="national_id" class="form-control"
+           maxlength="14"
+           value="{{ appointment.national_id if appointment else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="district_id">الحي</label>
+    <select id="district_id" name="district_id" class="form-control">
+      <option value="">غير محدد</option>
+      {% for d in districts %}
+        <option value="{{ d.id }}"
+          {{ 'selected' if appointment and appointment.district_id == d.id }}>{{ d.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="form-label" for="details">الخدمة المطلوبة</label>
+  <textarea id="details" name="details" class="form-control">{{ appointment.details if appointment else '' }}</textarea>
+</div>
+
+<div class="form-group">
+  <label class="form-label" for="date">تاريخ ووقت الموعد</label>
+  <input type="text" id="date" name="date" class="form-control"
+         placeholder="2026-09-01 10:00"
+         value="{{ appointment.date if appointment else '' }}">
+</div>

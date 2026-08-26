@@ -1,0 +1,95 @@
+{# حقول الحي — مشتركة بين الإضافة والتعديل. `district` ممكن تكون None #}
+
+<div class="form-row">
+  <div class="form-group">
+    <label class="form-label" for="name">اسم الحي *</label>
+    <input type="text" id="name" name="name" class="form-control" required
+           placeholder="حي المنتزه أول"
+           value="{{ district.name if district else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="zone">المنطقة الإدارية</label>
+    <input type="text" id="zone" name="zone" class="form-control"
+           placeholder="المنتزه"
+           value="{{ district.zone if district else '' }}">
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="form-label" for="coverage">النطاق الجغرافي (المناطق التابعة)</label>
+  <textarea id="coverage" name="coverage" class="form-control"
+            placeholder="سيدي بشر، المندرة، العصافرة، ...">{{ district.coverage if district else '' }}</textarea>
+  <p class="form-hint">
+    اكتب أسماء المناطق والشوارع المعروفة، مفصولة بفاصلة. المساعد بيستخدمها عشان
+    يحدد الحي لوحده لما المواطن يذكر اسم منطقة بدل اسم الحي.
+  </p>
+</div>
+
+<div class="form-group">
+  <label class="form-label" for="address">العنوان</label>
+  <input type="text" id="address" name="address" class="form-control"
+         value="{{ district.address if district else '' }}">
+</div>
+
+<div class="form-row">
+  <div class="form-group">
+    <label class="form-label" for="phone">أرقام التليفون</label>
+    <input type="text" id="phone" name="phone" class="form-control"
+           placeholder="03xxxxxxx / 03xxxxxxx"
+           value="{{ district.phone if district else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="hotline">الخط الساخن</label>
+    <input type="text" id="hotline" name="hotline" class="form-control"
+           value="{{ district.hotline if district else '' }}">
+  </div>
+</div>
+
+<div class="form-row">
+  <div class="form-group">
+    <label class="form-label" for="email">البريد الإلكتروني</label>
+    <input type="email" id="email" name="email" class="form-control"
+           value="{{ district.email if district else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="working_hours">مواعيد العمل</label>
+    <input type="text" id="working_hours" name="working_hours" class="form-control"
+           placeholder="من الأحد للخميس، ٩ ص - ٢ م"
+           value="{{ district.working_hours if district else '' }}">
+  </div>
+</div>
+
+<div class="form-row">
+  <div class="form-group">
+    <label class="form-label" for="head_name">رئيس الحي</label>
+    <input type="text" id="head_name" name="head_name" class="form-control"
+           value="{{ district.head_name if district else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="map_url">رابط الموقع على الخريطة</label>
+    <input type="url" id="map_url" name="map_url" class="form-control"
+           value="{{ district.map_url if district else '' }}">
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="form-label" for="info">معلومات إضافية</label>
+  <textarea id="info" name="info" class="form-control">{{ district.info if district else '' }}</textarea>
+  <p class="form-hint">
+    أي تفاصيل يحتاجها المواطن. أي خانة تسيبها فاضية، المساعد ببساطة مش هيذكرها —
+    ومش هيخترع بديل ليها.
+  </p>
+</div>
+
+{% if district %}
+<div class="form-group">
+  <label class="form-label">
+    <input type="checkbox" name="is_active" value="1" {{ 'checked' if district.is_active }}>
+    الحي نشط ويظهر للمواطنين
+  </label>
+</div>
+{% endif %}

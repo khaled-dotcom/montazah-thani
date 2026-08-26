@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" preserveAspectRatio="xMidYMax meet"
+     role="img" aria-label="قلعة قايتباي على شاطئ الإسكندرية">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       قلعة قايتباي — رسم صامت للخلفية.
+       currentColor عشان تاخد لون النص وتشتغل في الفاتح والغامق.
+       ═══════════════════════════════════════════════════════════ -->
+
+  <g fill="currentColor" fill-rule="evenodd">
+
+    <!-- ── البرج الرئيسي (القلب) ─────────────────────────────── -->
+    <!-- الجسم -->
+    <rect x="530" y="96" width="140" height="164"/>
+
+    <!-- الشرافات العلوية -->
+    <rect x="530" y="86" width="16" height="12"/>
+    <rect x="561" y="86" width="16" height="12"/>
+    <rect x="592" y="86" width="16" height="12"/>
+    <rect x="623" y="86" width="16" height="12"/>
+    <rect x="654" y="86" width="16" height="12"/>
+
+    <!-- البرج الدائري فوق القلب -->
+    <rect x="573" y="46" width="54" height="42"/>
+    <path d="M573 48 a27 22 0 0 1 54 0 z"/>
+    <rect x="573" y="38" width="10" height="10"/>
+    <rect x="595" y="34" width="10" height="10"/>
+    <rect x="617" y="38" width="10" height="10"/>
+
+    <!-- نوافذ القلب -->
+    <rect x="556" y="132" width="12" height="26" fill-opacity=".45"/>
+    <rect x="594" y="132" width="12" height="26" fill-opacity=".45"/>
+    <rect x="632" y="132" width="12" height="26" fill-opacity=".45"/>
+    <rect x="575" y="186" width="14" height="30" fill-opacity=".45"/>
+    <rect x="613" y="186" width="14" height="30" fill-opacity=".45"/>
+
+    <!-- ── السور الشرقي ──────────────────────────────────────── -->
+    <rect x="380" y="176" width="150" height="84"/>
+    <rect x="380" y="166" width="14" height="12"/>
+    <rect x="408" y="166" width="14" height="12"/>
+    <rect x="436" y="166" width="14" height="12"/>
+    <rect x="464" y="166" width="14" height="12"/>
+    <rect x="492" y="166" width="14" height="12"/>
+    <rect x="516" y="166" width="14" height="12"/>
+
+    <!-- برج ركن شرقي -->
+    <rect x="344" y="150" width="44" height="110"/>
+    <path d="M344 152 a22 18 0 0 1 44 0 z"/>
+    <rect x="344" y="142" width="10" height="10"/>
+    <rect x="366" y="140" width="10" height="10"/>
+    <rect x="378" y="142" width="10" height="10"/>
+    <rect x="358" y="186" width="12" height="24" fill-opacity=".45"/>
+
+    <!-- ── السور الغربي ──────────────────────────────────────── -->
+    <rect x="670" y="176" width="150" height="84"/>
+    <rect x="670" y="166" width="14" height="12"/>
+    <rect x="698" y="166" width="14" height="12"/>
+    <rect x="726" y="166" width="14" height="12"/>
+    <rect x="754" y="166" width="14" height="12"/>
+    <rect x="782" y="166" width="14" height="12"/>
+    <rect x="806" y="166" width="14" height="12"/>
+
+    <!-- برج ركن غربي -->
+    <rect x="812" y="150" width="44" height="110"/>
+    <path d="M812 152 a22 18 0 0 1 44 0 z"/>
+    <rect x="812" y="142" width="10" height="10"/>
+    <rect x="834" y="140" width="10" height="10"/>
+    <rect x="846" y="142" width="10" height="10"/>
+    <rect x="830" y="186" width="12" height="24" fill-opacity=".45"/>
+
+    <!-- ── القاعدة الصخرية / الرصيف ──────────────────────────── -->
+    <rect x="300" y="260" width="600" height="26"/>
+    <path d="M300 260 L250 286 L950 286 L900 260 z"/>
+
+    <!-- ── الأسوار الممتدة على الجانبين ───────────────────────── -->
+    <rect x="150" y="238" width="152" height="24"/>
+    <rect x="150" y="230" width="12" height="10"/>
+    <rect x="178" y="230" width="12" height="10"/>
+    <rect x="206" y="230" width="12" height="10"/>
+    <rect x="234" y="230" width="12" height="10"/>
+    <rect x="262" y="230" width="12" height="10"/>
+    <rect x="290" y="230" width="12" height="10"/>
+
+    <rect x="898" y="238" width="152" height="24"/>
+    <rect x="898" y="230" width="12" height="10"/>
+    <rect x="926" y="230" width="12" height="10"/>
+    <rect x="954" y="230" width="12" height="10"/>
+    <rect x="982" y="230" width="12" height="10"/>
+    <rect x="1010" y="230" width="12" height="10"/>
+    <rect x="1038" y="230" width="12" height="10"/>
+
+  </g>
+
+  <!-- ── البحر — موجات خفيفة ──────────────────────────────────── -->
+  <g stroke="currentColor" fill="none" stroke-linecap="round">
+    <path d="M40 300 q30 -9 60 0 t60 0 t60 0 t60 0 t60 0 t60 0"
+          stroke-width="2.5" opacity=".5"/>
+    <path d="M700 300 q30 -9 60 0 t60 0 t60 0 t60 0 t60 0 t60 0"
+          stroke-width="2.5" opacity=".5"/>
+
+    <path d="M100 318 q34 -10 68 0 t68 0 t68 0 t68 0 t68 0"
+          stroke-width="2" opacity=".34"/>
+    <path d="M760 318 q34 -10 68 0 t68 0 t68 0 t68 0"
+          stroke-width="2" opacity=".34"/>
+
+    <path d="M20 334 q40 -11 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0"
+          stroke-width="1.6" opacity=".22"/>
+  </g>
+
+</svg>

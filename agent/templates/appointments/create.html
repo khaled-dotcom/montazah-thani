@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}حجز موعد — {{ org_name }}{% endblock %}
+{% block topbar_title %}حجز موعد يدوي{% endblock %}
+{% block topbar_sub %}للمواطنين اللي بيتصلوا أو بيحضروا مباشرة{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="POST" style="padding:24px">
+    {% set appointment = None %}
+    {% include "appointments/_form.html" %}
+
+    <div style="display:flex;gap:10px;margin-top:24px">
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="save"></i> حفظ الموعد
+      </button>
+      <a href="{{ url_for('list_appointments') }}" class="btn btn-ghost">إلغاء</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

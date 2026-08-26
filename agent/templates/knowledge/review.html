@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}المعرفة الذكية — {{ entity.name }}{% endblock %}
+{% block topbar_title %}المعرفة الذكية — {{ entity.name }}{% endblock %}
+{% block topbar_sub %}
+  وصف ومرادفات بتتولّد بالذكاء الاصطناعي عشان المساعد يلاقي العنصر ده حتى لو المواطن كتبه بطريقة تانية
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('list_services' if target == 'service' else 'list_districts') }}"
+     class="btn btn-ghost btn-sm">
+    <i data-lucide="arrow-right"></i> رجوع
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="alert-card alert-orange">
+  <div class="alert-icon"><i data-lucide="user-check"></i></div>
+  <div>
+    <strong>لازم مراجعتك قبل الاعتماد.</strong>
+    النص اللي تحت متولّد آليًا. اقرأه وصحّح أي حاجة غلط قبل ما تضغط اعتماد —
+    بعد الاعتماد المساعد هيستخدمه في الرد على المواطنين.
+  </div>
+</div>
+
+{% if not generated %}
+
+<div class="card" style="margin-top:22px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="sparkles"></i> توليد المعرفة</h2>
+  </div>
+  <div style="padding:24px">
+    <p style="line-height:1.9;margin-bottom:18px">
+      المساعد بيدوّر بطريقتين: مطابقة نصية للأسماء، وبحث دلالي بالمعنى.
+      البحث الدلالي محتاج وصف ومرادفات للعنصر ده عشان يشتغل — مثلاً المواطن
+      يكتب «تصريح مزاولة نشاط» والنظام يوصله لـ «ترخيص محل تجاري».
+    </p>
+
+    {% if entity.search_text %}
+      <div class="alert-card alert-green" style="margin-bottom:18px">
+        <div class="alert-icon"><i data-lucide="check-circle-2"></i></div>
+        <div>فيه معرفة معتمدة بالفعل للعنصر ده. التوليد هيقترح نسخة جديدة تستبدلها.</div>
+      </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('generate_knowledge_route', target=target, entity_id=entity.id) }}">
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="sparkles"></i> توليد
+      </button>
+    </form>
+  </div>
+</div>
+
+{% else %}
+
+<form method="POST" action="{{ url_for('approve_knowledge_route', target=target, entity_id=entity.id) }}">
+  <div class="card" style="margin-top:22px">
+    <div class="card-header">
+      <h2 class="card-title"><i data-lucide="file-check-2"></i> راجع وعدّل قبل الاعتماد</h2>
+    </div>
+
+    <div style="padding:24px">
+      <div class="form-group">
+        <label class="form-label" for="description">الوصف *</label>
+        <textarea id="description" name="description" class="form-control"
+                  style="min-height:130px" required>{{ generated.description }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="aliases">الأسماء البديلة</label>
+        <input type="text" id="aliases" name="aliases" class="form-control"
+               value="{{ generated.aliases | join(', ') }}">
+        <p class="form-hint">مفصولة بفاصلة. امسح أي اسم مش صحيح — هيأثر على دقة البحث.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="keywords">الكلمات المفتاحية</label>
+        <input type="text" id="keywords" name="keywords" class="form-control"
+               value="{{ generated.keywords | join(', ') }}">
+        <p class="form-hint">مفصولة بفاصلة.</p>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="check"></i> اعتماد وإضافة للبحث
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="card" style="margin-top:20px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="refresh-cw"></i> مش عاجبك؟ ولّد تاني</h2>
+  </div>
+  <form method="POST" action="{{ url_for('generate_knowledge_route', target=target, entity_id=entity.id) }}"
+        style="padding:24px">
+    <input type="hidden" name="previous_output" value="{{ generated.model_dump_json() }}">
+
+    <div class="form-group">
+      <label class="form-label" for="admin_feedback">قول له إيه اللي عايز يتغير</label>
+      <input type="text" id="admin_feedback" name="admin_feedback" class="form-control"
+             placeholder="مثال: الوصف عام أوي، ركّز على إن الخدمة دي للمحلات التجارية بس">
+    </div>
+
+    <button type="submit" class="btn btn-secondary">
+      <i data-lucide="refresh-cw"></i> توليد نسخة جديدة
+    </button>
+  </form>
+</div>
+
+{% endif %}
+
+{% endblock %}

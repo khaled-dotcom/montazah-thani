@@ -1,0 +1,737 @@
+@import 'tailwindcss';
+
+/* The theme is a choice, not just an OS setting. An inline script in the layout
+   resolves the reader's stored preference (light | dark | system) into a
+   data-theme attribute on <html> before first paint, so `dark:` keys off that
+   one attribute rather than off the media query. Light is the default: this is
+   a district portal, and its palette — sand, harbour blue, opera gold — is the
+   light one. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* ---------------------------------------------------------------------------
+   Design tokens
+   Palette drawn from the district itself: the Mediterranean at the Eastern
+   Harbour (sea), the limestone and granite of the monuments (sand/stone),
+   the brass and gilt of the opera house (gold), and Roman brick (terracotta).
+--------------------------------------------------------------------------- */
+@theme {
+  --font-sans: var(--font-body), 'Tajawal', 'Segoe UI', system-ui, sans-serif;
+  --font-display: var(--font-heading), 'Cairo', 'Segoe UI', system-ui, sans-serif;
+
+  --color-sea-50: #eef6fa;
+  --color-sea-100: #d3e8f2;
+  --color-sea-200: #a5cfe4;
+  --color-sea-300: #6fb0d1;
+  --color-sea-400: #3f8cb4;
+  --color-sea-500: #226d97;
+  --color-sea-600: #14557b;
+  --color-sea-700: #0e4262;
+  --color-sea-800: #0b3450;
+  --color-sea-900: #082639;
+
+  --color-sand-50: #fbf7f0;
+  --color-sand-100: #f4ecdd;
+  --color-sand-200: #e8dac2;
+  --color-sand-300: #d8c3a1;
+  --color-sand-400: #c3a678;
+
+  --color-gold-400: #d7ab4f;
+  --color-gold-500: #c08f2e;
+  --color-gold-600: #9a6f1f;
+
+  --color-terracotta-400: #cc7a5f;
+  --color-terracotta-500: #b25a3d;
+  --color-terracotta-600: #8f4529;
+
+  --color-verdigris-400: #4fa89b;
+  --color-verdigris-500: #2f857a;
+  --color-verdigris-600: #1f665d;
+
+  --color-ink-900: #14212b;
+  --color-ink-700: #33454f;
+  --color-ink-500: #5c6f79;
+
+  /* Semantic tokens — the light values live here, dark overrides below.
+     Named so Tailwind generates readable utilities: bg-canvas, text-fg-muted,
+     border-line, bg-brand, and so on. */
+  --color-canvas: #fbf9f5;
+  --color-canvas-alt: #f4efe5;
+  --color-surface: #ffffff;
+  --color-surface-2: #f7f3ec;
+  --color-line: #e2d9c9;
+  --color-line-strong: #cbbda5;
+  --color-fg: #14212b;
+  --color-fg-muted: #55656f;
+  --color-brand: #0e4262;
+  --color-brand-fg: #ffffff;
+  --color-accent: #9a6f1f;
+  --color-focus: #226d97;
+
+  --radius-card: 0.875rem;
+  --shadow-card: 0 1px 2px rgb(20 33 43 / 0.05), 0 8px 24px -12px rgb(20 33 43 / 0.18);
+}
+
+/* Dark theme: only the semantic tokens change. Every utility reads these vars,
+   so the whole interface follows without a second set of classes.
+   Driven by data-theme, which the layout script sets from the stored choice or
+   from the OS when that choice is "system". */
+:root[data-theme='dark'] {
+  --color-canvas: #0b1620;
+  --color-canvas-alt: #0f1f2b;
+  --color-surface: #13252f;
+  --color-surface-2: #182c38;
+  --color-line: #26404e;
+  --color-line-strong: #365567;
+  --color-fg: #eef4f7;
+  --color-fg-muted: #a3b7c2;
+  --color-brand: #a5cfe4;
+  --color-brand-fg: #082639;
+  --color-accent: #d7ab4f;
+  --color-focus: #6fb0d1;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+}
+
+/* ---------------------------------------------------------------------------
+   Decorative backgrounds
+
+   The eight-pointed star (khatam) is the geometric ground note of the city's
+   Mashrabiya and floor tiles; it arrives here as a single tiny SVG tile whose
+   stroke colour swaps with the theme through one custom property. Sections lay
+   it over gradients at low contrast, so texture reads without noise.
+--------------------------------------------------------------------------- */
+:root {
+  --pattern-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%230e4262' stroke-opacity='0.055'%3E%3Crect x='26' y='26' width='32' height='32'/%3E%3Crect x='26' y='26' width='32' height='32' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='5'/%3E%3Ccircle cx='0' cy='0' r='14'/%3E%3Ccircle cx='84' cy='0' r='14'/%3E%3Ccircle cx='0' cy='84' r='14'/%3E%3Ccircle cx='84' cy='84' r='14'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+:root[data-theme='dark'] {
+  --pattern-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.045'%3E%3Crect x='26' y='26' width='32' height='32'/%3E%3Crect x='26' y='26' width='32' height='32' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='5'/%3E%3Ccircle cx='0' cy='0' r='14'/%3E%3Ccircle cx='84' cy='0' r='14'/%3E%3Ccircle cx='0' cy='84' r='14'/%3E%3Ccircle cx='84' cy='84' r='14'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.bg-pattern {
+  background-image: var(--pattern-url);
+  background-size: 84px 84px;
+}
+
+/* A soft wash of harbour blue and opera gold in the top corners of every page,
+   under the content: the canvas never reads as flat dead white. */
+body {
+  background-image:
+    radial-gradient(56rem 30rem at 88% -12%, rgb(34 109 151 / 0.07), transparent 62%),
+    radial-gradient(44rem 26rem at -8% -6%, rgb(192 143 46 / 0.06), transparent 58%);
+}
+
+:root[data-theme='dark'] body {
+  background-image:
+    radial-gradient(56rem 30rem at 88% -12%, rgb(111 176 209 / 0.09), transparent 62%),
+    radial-gradient(44rem 26rem at -8% -6%, rgb(215 171 79 / 0.07), transparent 58%);
+}
+
+/* ---------------------------------------------------------------------------
+   Ambient canvas (home)
+
+   Three vast colour fields — harbour blue, opera gold, verdigris — breathing
+   slowly behind the whole page while it scrolls. One fixed layer, three
+   blurred radial fills, moved by composited transforms only. Colours come
+   from custom properties so each theme tunes its own intensity.
+--------------------------------------------------------------------------- */
+:root {
+  --ambient-sea: rgb(34 109 151 / 0.17);
+  --ambient-gold: rgb(192 143 46 / 0.15);
+  --ambient-verdigris: rgb(47 133 122 / 0.13);
+}
+
+:root[data-theme='dark'] {
+  --ambient-sea: rgb(63 140 180 / 0.22);
+  --ambient-gold: rgb(215 171 79 / 0.17);
+  --ambient-verdigris: rgb(79 168 155 / 0.16);
+}
+
+.ambient-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-canvas > span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+}
+
+.ambient-canvas .ambient-sea {
+  inline-size: 72vmax;
+  block-size: 72vmax;
+  inset-block-start: -24vmax;
+  inset-inline-start: -18vmax;
+  background: radial-gradient(closest-side, var(--ambient-sea), transparent 72%);
+}
+
+.ambient-canvas .ambient-gold {
+  inline-size: 60vmax;
+  block-size: 60vmax;
+  inset-block-end: -26vmax;
+  inset-inline-end: -20vmax;
+  background: radial-gradient(closest-side, var(--ambient-gold), transparent 72%);
+}
+
+.ambient-canvas .ambient-verdigris {
+  inline-size: 52vmax;
+  block-size: 52vmax;
+  inset-block-start: 34%;
+  inset-inline-start: 42%;
+  background: radial-gradient(closest-side, var(--ambient-verdigris), transparent 74%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ambient-canvas .ambient-sea {
+    animation: ambient-drift-a 44s ease-in-out infinite alternate;
+  }
+
+  .ambient-canvas .ambient-gold {
+    animation: ambient-drift-b 53s ease-in-out infinite alternate;
+  }
+
+  .ambient-canvas .ambient-verdigris {
+    animation: ambient-drift-c 61s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes ambient-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(9vw, 7vh, 0) scale(1.22);
+  }
+}
+
+@keyframes ambient-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.12);
+  }
+  to {
+    transform: translate3d(-8vw, -9vh, 0) scale(0.92);
+  }
+}
+
+@keyframes ambient-drift-c {
+  from {
+    transform: translate3d(-4vw, 3vh, 0) scale(0.95);
+  }
+  to {
+    transform: translate3d(5vw, -5vh, 0) scale(1.18);
+  }
+}
+
+/* A whisper of film grain over the ambient fields — what turns a flat
+   gradient into something with tooth. A tiny tiled feTurbulence, barely
+   there at five percent, blended softly. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Ambient light: two blurred orbs that drift behind dark bands. GPU-only work
+   (transform), paused entirely for readers who asked for less motion. */
+.orb {
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(64px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .orb-drift-a {
+    animation: orb-a 26s ease-in-out infinite alternate;
+  }
+
+  .orb-drift-b {
+    animation: orb-b 21s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes orb-a {
+  from {
+    transform: translate3d(-4%, -3%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(7%, 8%, 0) scale(1.18);
+  }
+}
+
+@keyframes orb-b {
+  from {
+    transform: translate3d(6%, 5%, 0) scale(1.12);
+  }
+  to {
+    transform: translate3d(-6%, -7%, 0) scale(0.94);
+  }
+}
+
+/* The gilt band that opens and closes every page — now flowing slowly along
+   its own length. Under reduced motion the global rule stills it to a plain,
+   handsome gradient. */
+.gilt-band {
+  position: relative;
+  z-index: 10;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--color-gold-500),
+    var(--color-terracotta-400),
+    var(--color-verdigris-500),
+    var(--color-gold-500)
+  );
+  background-size: 220% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gilt-band {
+    animation: gilt-flow 14s linear infinite;
+  }
+}
+
+@keyframes gilt-flow {
+  to {
+    background-position: -220% 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+--------------------------------------------------------------------------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.75;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Arabic reads better with a slightly larger body size and looser leading. */
+  :lang(ar) body,
+  [dir='rtl'] body {
+    font-size: 1.0625rem;
+    line-height: 1.9;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--color-fg);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+    text-underline-offset: 0.25em;
+  }
+
+  /* A visible, high-contrast focus ring everywhere — never removed. */
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-sea-200);
+    color: var(--color-ink-900);
+  }
+
+  /* A quiet scrollbar that takes its colours from the theme. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border-radius: 8px;
+    border: 2px solid var(--color-canvas);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-fg-muted);
+  }
+
+  hr {
+    border-color: var(--color-line);
+  }
+
+  /* Respect the reader's motion preference. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Components
+--------------------------------------------------------------------------- */
+@layer components {
+  .page-width {
+    width: 100%;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .page-width {
+      padding-inline: 2rem;
+    }
+  }
+
+  .card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Cards that answer the pointer: a small lift, a firmer border and a
+     deeper shadow. Kept to transform/opacity/border so it stays cheap. */
+  .card-interactive {
+    transition:
+      transform 0.25s ease,
+      border-color 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  .card-interactive:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-line-strong);
+    box-shadow:
+      0 2px 4px rgb(20 33 43 / 0.06),
+      0 16px 32px -16px rgb(20 33 43 / 0.28);
+  }
+
+  /* A single sweep of light across a hovered card — one transform on one
+     pseudo-element, so it stays cheap even in long grids. */
+  .card-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 32%,
+      rgb(255 255 255 / 0.22) 47%,
+      transparent 62%
+    );
+    transform: translateX(-130%);
+    transition: transform 0.9s ease;
+    pointer-events: none;
+  }
+
+  .card-sheen:hover::after {
+    transform: translateX(130%);
+  }
+
+  .surface-alt {
+    position: relative;
+    background-color: var(--color-canvas-alt);
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-sea-100) 22%, transparent),
+      transparent 30%,
+      transparent 70%,
+      color-mix(in oklab, var(--color-gold-400) 10%, transparent)
+    );
+  }
+
+  /* The khatam lattice over alternating bands, fading at both ends so the
+     texture lives in the middle of the band rather than at its seams. */
+  .surface-alt::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: var(--pattern-url);
+    background-size: 84px 84px;
+    opacity: 0.75;
+    mask-image: linear-gradient(to bottom, transparent, black 18%, black 82%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 18%, black 82%, transparent);
+  }
+
+  .surface-alt > * {
+    position: relative;
+  }
+
+  /* Display type with the district's metals running through it. Used sparingly:
+     one line per page at most. */
+  .text-gradient {
+    background: linear-gradient(
+      100deg,
+      var(--color-gold-400),
+      var(--color-terracotta-500) 45%,
+      var(--color-verdigris-500)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Menus and popovers arrive with a small settle rather than appearing
+     mid-air. Runs before hydration; stilled by reduced motion globally. */
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes pop-in {
+      from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .pop-in {
+      animation: pop-in 0.18s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+      transform-origin: top;
+    }
+  }
+
+  /* Long-form article text. */
+  .prose-district {
+    max-width: 68ch;
+  }
+
+  .prose-district p {
+    margin-block: 1em;
+    color: var(--color-fg-muted);
+  }
+
+  .prose-district p:first-child {
+    margin-block-start: 0;
+  }
+
+  .prose-district strong {
+    color: var(--color-fg);
+  }
+
+  /* Decorative rule that mirrors correctly in RTL. */
+  .rule-accent::before {
+    content: '';
+    display: block;
+    inline-size: 3rem;
+    block-size: 3px;
+    background: linear-gradient(
+      to inline-end,
+      var(--color-accent),
+      transparent
+    );
+    margin-block-end: 0.75rem;
+    border-radius: 2px;
+  }
+
+  /* Entrance: content rises into place on first paint. Pure CSS, so it runs
+     before hydration and simply does not run when motion is reduced. */
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes rise-in {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .rise {
+      animation: rise-in 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    }
+
+    .rise-1 { animation-delay: 0.05s; }
+    .rise-2 { animation-delay: 0.12s; }
+    .rise-3 { animation-delay: 0.2s; }
+    .rise-4 { animation-delay: 0.3s; }
+    .rise-5 { animation-delay: 0.42s; }
+  }
+
+  /* Scroll-reveal, paired with components/reveal.tsx. Content is hidden only
+     when the pre-paint script has flagged JavaScript as present (html.js), so
+     a reader without scripting — and a crawler — see everything rendered.
+     The transition lives on the revealed state: adding the class animates the
+     change from hidden to shown. */
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .js [data-reveal].revealed {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.75s cubic-bezier(0.2, 0.7, 0.3, 1),
+      transform 0.75s cubic-bezier(0.2, 0.7, 0.3, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .js [data-reveal] {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+
+  .skip-link {
+    position: absolute;
+    inset-inline-start: 1rem;
+    inset-block-start: -4rem;
+    z-index: 100;
+    padding: 0.75rem 1.25rem;
+    background: var(--color-brand);
+    color: var(--color-brand-fg);
+    border-radius: 0 0 0.5rem 0.5rem;
+    transition: inset-block-start 0.15s ease;
+  }
+
+  .skip-link:focus {
+    inset-block-start: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Utilities
+--------------------------------------------------------------------------- */
+@utility text-balance-ar {
+  text-wrap: balance;
+}
+
+/* Numerals stay Western even in Arabic UI, matching official forms. */
+@utility tnum {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   Typographic corrections — deliberately unlayered.
+
+   Tailwind's font-size utilities also set a line-height (text-5xl and above use
+   line-height: 1), which collides badly in Arabic: the tails and diacritics of
+   one line overlap the next. Cascade layers beat specificity, so a rule inside
+   @layer base would lose to those utilities — these rules sit outside every
+   layer so they win wherever a heading is sized by a utility.
+--------------------------------------------------------------------------- */
+:is(h1, h2, h3, h4) {
+  line-height: 1.3;
+}
+
+[dir='rtl'] :is(h1, h2, h3, h4) {
+  line-height: 1.5;
+}
+
+/* Figures that carry a leading sign (≈545,000, +2,300) must be isolated from
+   the surrounding RTL run, or the sign jumps to the wrong end of the number. */
+.num {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   Print
+   A resident printing a service page wants the paperwork list, not the site.
+   Everything structural is dropped so the checklist starts at the top of a
+   clean sheet, and links are un-styled because ink is not clickable.
+--------------------------------------------------------------------------- */
+@media print {
+  header,
+  footer,
+  nav,
+  aside,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .ambient-canvas,
+  .grain,
+  .orb {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 12pt;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .card {
+    border: 1px solid #999 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  /* Keep a checklist from splitting an item across two pages. */
+  .print-sheet li {
+    break-inside: avoid;
+  }
+
+  a {
+    text-decoration: none !important;
+    color: #000 !important;
+  }
+
+  /* Spell out where an external link went, since it cannot be followed. */
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 9pt;
+    word-break: break-all;
+  }
+
+  @page {
+    margin: 1.5cm;
+  }
+}

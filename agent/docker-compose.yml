@@ -1,0 +1,54 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: alx-districts-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-districts_db}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  web:
+    build: .
+    container_name: alx-districts-agent
+    restart: always
+    ports:
+      - "6789:4500"
+    volumes:
+      - ./static/uploads:/app/static/uploads
+      # كاش موديل الـ embeddings — بينزل مرة واحدة ويفضل بعد إعادة البناء
+      - embedding_cache:/app/.embedding_cache
+    env_file:
+      - .env
+    environment:
+      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4500/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      # أول تشغيل بيحمّل موديل الـ embeddings (~2.2GB) قبل ما جونيكورن يبدأ.
+      # مهلة قصيرة هنا بتعلّم الحاوية unhealthy وهي بتشتغل صح.
+      start_period: 900s
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  pgdata:
+  embedding_cache:

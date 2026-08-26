@@ -1,0 +1,13 @@
+# Normalize line endings to LF on check-in (Linux server needs LF)
+* text=auto eol=lf
+
+# Binary files — never touch endings
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

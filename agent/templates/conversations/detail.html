@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, transcript, delete_form %}
+
+{% block title %}محادثة {{ citizen.name or citizen.session_id[:12] }} — {{ org_name }}{% endblock %}
+{% block topbar_title %}محادثة {{ citizen.name or 'زائر' }}{% endblock %}
+{% block topbar_sub %}{{ citizen.phone or citizen.session_id }}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('list_conversations') }}" class="btn btn-ghost btn-sm">
+    <i data-lucide="arrow-right"></i> رجوع
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="settings-grid">
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i data-lucide="messages-square"></i> نص المحادثة</h2>
+    </div>
+    <div style="padding:20px">
+      {{ transcript(messages) }}
+    </div>
+  </div>
+
+  <div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title"><i data-lucide="user"></i> بيانات الجلسة</h2>
+      </div>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-body">
+            <div class="info-label">الحي</div>
+            <div class="info-value">{{ citizen.district.name if citizen.district else '—' }}</div>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-body">
+            <div class="info-label">عدد الرسائل</div>
+            <div class="info-value">{{ citizen.message_count or 0 }}</div>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-body">
+            <div class="info-label">بدأت</div>
+            <div class="info-value">
+              {{ citizen.created_at.strftime('%Y-%m-%d %H:%M') if citizen.created_at else '—' }}
+            </div>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-body">
+            <div class="info-label">آخر نشاط</div>
+            <div class="info-value">
+              {{ citizen.last_seen_at.strftime('%Y-%m-%d %H:%M') if citizen.last_seen_at else '—' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if complaints %}
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <h2 class="card-title"><i data-lucide="megaphone"></i> بلاغات من هذه الجلسة</h2>
+      </div>
+      <div class="table-wrapper">
+        <table class="table">
+          <tbody>
+            {% for c in complaints %}
+            <tr onclick="location.href='{{ url_for('complaint_detail', complaint_id=c.id) }}'"
+                style="cursor:pointer">
+              <td><strong>{{ c.reference_id }}</strong></td>
+              <td>{{ c.category.value if c.category else '—' }}</td>
+              <td>{{ status_badge(c.status) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if appointments %}
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <h2 class="card-title"><i data-lucide="calendar-check"></i> مواعيد من هذه الجلسة</h2>
+      </div>
+      <div class="table-wrapper">
+        <table class="table">
+          <tbody>
+            {% for a in appointments %}
+            <tr onclick="location.href='{{ url_for('appointment_detail', appointment_id=a.id) }}'"
+                style="cursor:pointer">
+              <td><strong>{{ a.reference_id }}</strong></td>
+              <td>{{ a.date or '—' }}</td>
+              <td>{{ status_badge(a.status) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <h2 class="card-title"><i data-lucide="brain"></i> ذاكرة المساعد</h2>
+      </div>
+      <div style="padding:20px">
+        <p style="line-height:1.9;white-space:pre-wrap;font-size:.9rem">
+          {{ citizen.summary or 'لا يوجد ملخص بعد.' }}
+        </p>
+        <p class="form-hint" style="margin-top:12px">
+          ده الملخص اللي المساعد بيقرأه في كل رسالة جديدة بدل ما يقرأ المحادثة كلها.
+        </p>
+      </div>
+    </div>
+
+    <div class="danger-zone" style="margin-top:20px">
+      <div class="danger-zone-header">
+        <div class="danger-zone-icon"><i data-lucide="alert-triangle"></i></div>
+        <div>
+          <div class="danger-zone-title">حذف المحادثة</div>
+          <div class="danger-zone-sub">هيتم حذف كل الرسائل المحفوظة</div>
+        </div>
+      </div>
+      <div class="danger-zone-actions">
+        {{ delete_form(url_for('delete_conversation', session_id=citizen.session_id)) }}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

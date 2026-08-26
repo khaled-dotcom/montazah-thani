@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل الموعد {{ appointment.reference_id }} — {{ org_name }}{% endblock %}
+{% block topbar_title %}تعديل الموعد {{ appointment.reference_id }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="POST" style="padding:24px">
+    {% include "appointments/_form.html" %}
+
+    <div style="display:flex;gap:10px;margin-top:24px">
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="save"></i> حفظ التعديلات
+      </button>
+      <a href="{{ url_for('appointment_detail', appointment_id=appointment.id) }}"
+         class="btn btn-ghost">رجوع</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

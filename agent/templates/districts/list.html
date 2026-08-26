@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pager, empty_state, delete_form %}
+
+{% block title %}الأحياء — {{ org_name }}{% endblock %}
+{% block topbar_title %}الأحياء{% endblock %}
+{% block topbar_sub %}بيانات الأحياء التي يعتمد عليها المساعد في الرد على المواطنين{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('create_district') }}" class="btn btn-primary btn-sm">
+    <i data-lucide="plus"></i> إضافة حي
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+  <div class="toolbar">
+    <form method="GET" class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" name="search" class="search-input"
+             placeholder="ابحث باسم الحي أو المنطقة أو النطاق..."
+             value="{{ search }}">
+    </form>
+  </div>
+
+  {% if pagination and pagination.items %}
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>الحي</th>
+          <th>المنطقة</th>
+          <th>بيانات التواصل</th>
+          <th>النطاق الجغرافي</th>
+          <th>الحالة</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in pagination.items %}
+        <tr>
+          <td><strong>{{ d.name }}</strong></td>
+          <td>{{ d.zone or '—' }}</td>
+          <td>
+            {% if d.phone or d.address or d.working_hours %}
+              {% if d.phone %}<div>📞 {{ d.phone }}</div>{% endif %}
+              {% if d.working_hours %}<div style="color:var(--text-muted);font-size:.85rem">🕒 {{ d.working_hours }}</div>{% endif %}
+            {% else %}
+              <span class="field-missing">⚠ غير مكتملة</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if d.coverage %}
+              <span style="font-size:.85rem">{{ d.coverage|truncate(60) }}</span>
+            {% else %}
+              <span class="field-missing">⚠ فارغ</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="status-badge {{ 'status-resolved' if d.is_active else 'status-rejected' }}">
+              {{ 'نشط' if d.is_active else 'معطّل' }}
+            </span>
+          </td>
+          <td>
+            <a href="{{ url_for('edit_district', district_id=d.id) }}"
+               class="btn btn-sm btn-ghost" title="تعديل">
+              <i data-lucide="pencil"></i>
+            </a>
+            <a href="{{ url_for('district_departments', district_id=d.id) }}"
+               class="btn btn-sm btn-ghost" title="الإدارات المختصة">
+              <i data-lucide="git-branch"></i>
+            </a>
+            <a href="{{ url_for('review_knowledge', target='district', entity_id=d.id) }}"
+               class="btn btn-sm btn-outline" title="توليد وصف للبحث الذكي">
+              <i data-lucide="sparkles"></i>
+            </a>
+            {{ delete_form(url_for('delete_district', district_id=d.id)) }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {{ pager(pagination, 'list_districts', {'search': search}) }}
+
+  {% else %}
+    {{ empty_state('building-2', 'لا توجد أحياء مسجلة',
+                   'شغّل الأمر flask seed-districts أو أضف الأحياء يدويًا.') }}
+  {% endif %}
+
+</div>
+
+<div class="alert-card alert-orange" style="margin-top:20px">
+  <div class="alert-icon"><i data-lucide="info"></i></div>
+  <div>
+    <strong>النطاق الجغرافي مهم.</strong>
+    لما تكتب المناطق التابعة لكل حي (مثال: «سيدي بشر، المندرة، العصافرة»)،
+    المساعد يقدر يجاوب المواطن اللي يسأل «أنا تابع لأنهي حي؟» ويحوّل بلاغه للحي الصح
+    من غير ما يسأله. من غيرها هيضطر يسأل في كل مرة.
+  </div>
+</div>
+
+{% endblock %}

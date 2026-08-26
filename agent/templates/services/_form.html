@@ -1,0 +1,95 @@
+{# حقول الخدمة — مشتركة بين الإضافة والتعديل. `service` ممكن تكون None #}
+
+<div class="form-row">
+  <div class="form-group">
+    <label class="form-label" for="name">اسم الخدمة *</label>
+    <input type="text" id="name" name="name" class="form-control" required
+           placeholder="ترخيص محل تجاري"
+           value="{{ service.name if service else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="district_id">الحي</label>
+    <select id="district_id" name="district_id" class="form-control">
+      <option value="">متاحة في كل الأحياء</option>
+      {% for d in districts %}
+        <option value="{{ d.id }}"
+          {{ 'selected' if service and service.district_id == d.id }}>{{ d.name }}</option>
+      {% endfor %}
+    </select>
+    <p class="form-hint">سيبها فاضية لو الخدمة موحّدة في كل الأحياء.</p>
+  </div>
+</div>
+
+<div class="form-row">
+  <div class="form-group">
+    <label class="form-label" for="category">التصنيف</label>
+    <input type="text" id="category" name="category" class="form-control"
+           placeholder="تراخيص / إشغالات / مساحة"
+           value="{{ service.category if service else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="department">الإدارة المختصة</label>
+    <input type="text" id="department" name="department" class="form-control"
+           value="{{ service.department if service else '' }}">
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="form-label" for="description">وصف الخدمة</label>
+  <textarea id="description" name="description" class="form-control">{{ service.description if service else '' }}</textarea>
+</div>
+
+<div class="form-row">
+  <div class="form-group">
+    <label class="form-label" for="fees">الرسوم (جنيه)</label>
+    <input type="number" step="0.01" min="0" id="fees" name="fees" class="form-control"
+           value="{{ service.fees if service and service.fees is not none else '' }}">
+    <p class="form-hint">سيبها فاضية لو الرسوم غير محددة — أفضل من رقم تقريبي.</p>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="duration">مدة الإنجاز</label>
+    <input type="text" id="duration" name="duration" class="form-control"
+           placeholder="١٥ يوم عمل"
+           value="{{ service.duration if service else '' }}">
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="form-label" for="fees_note">ملاحظة على الرسوم</label>
+  <input type="text" id="fees_note" name="fees_note" class="form-control"
+         placeholder="تختلف حسب المساحة والنشاط"
+         value="{{ service.fees_note if service else '' }}">
+</div>
+
+<div class="form-group">
+  <label class="form-label" for="required_documents">الأوراق المطلوبة</label>
+  <textarea id="required_documents" name="required_documents" class="form-control"
+            style="min-height:140px"
+            placeholder="صورة بطاقة الرقم القومي&#10;عقد الإيجار أو الملكية&#10;السجل التجاري">{{ service.required_documents if service else '' }}</textarea>
+  <p class="form-hint">ورقة في كل سطر — المساعد بيعرضها كقائمة للمواطن.</p>
+</div>
+
+<div class="form-group">
+  <label class="form-label" for="steps">خطوات إنهاء المعاملة</label>
+  <textarea id="steps" name="steps" class="form-control">{{ service.steps if service else '' }}</textarea>
+</div>
+
+<div class="form-group">
+  <label class="form-label">
+    <input type="checkbox" name="is_bookable" value="1"
+           {{ 'checked' if not service or service.is_bookable }}>
+    تقبل حجز موعد من خلال الشات
+  </label>
+</div>
+
+{% if service %}
+<div class="form-group">
+  <label class="form-label">
+    <input type="checkbox" name="is_active" value="1" {{ 'checked' if service.is_active }}>
+    الخدمة نشطة وتظهر في نتائج بحث المساعد
+  </label>
+</div>
+{% endif %}

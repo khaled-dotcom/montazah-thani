@@ -1,0 +1,431 @@
+/* ===========================================================================
+   chat.css — واجهة المحادثة (صفحة كاملة + widget)
+   =========================================================================== */
+
+:root {
+  --c-primary:        #0d6e54;
+  --c-primary-dark:   #084f3c;
+  --c-primary-soft:   #e6f4ef;
+  --c-accent:         #c8a34a;
+
+  --c-bg:             #f4f6f8;
+  --c-surface:        #ffffff;
+  --c-border:         #e2e8f0;
+
+  --c-text:           #0f172a;
+  --c-text-muted:     #64748b;
+
+  --c-bot-bg:         #ffffff;
+  --c-user-bg:        #0d6e54;
+  --c-user-text:      #ffffff;
+
+  --c-radius:         16px;
+  --c-shadow:         0 1px 2px rgba(15, 23, 42, .06), 0 8px 24px rgba(15, 23, 42, .06);
+  --c-font:           'Cairo', 'Segoe UI', Tahoma, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--c-font);
+  color: var(--c-text);
+  background: var(--c-bg);
+}
+
+/* ── shell ───────────────────────────────────────────────────────────────── */
+
+.chat-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+  background: var(--c-surface);
+}
+
+.chat-shell.is-page {
+  height: 100dvh;
+  box-shadow: var(--c-shadow);
+}
+
+/* ── header ──────────────────────────────────────────────────────────────── */
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--c-primary), var(--c-primary-dark));
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.chat-header .avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .18);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.chat-header .titles { flex: 1; min-width: 0; }
+
+.chat-header .title {
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-header .subtitle {
+  font-size: 12px;
+  opacity: .85;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, .7);
+  animation: pulse 2.2s infinite;
+}
+
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(74, 222, 128, .6); }
+  70%  { box-shadow: 0 0 0 7px rgba(74, 222, 128, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+.chat-header .header-btn {
+  background: rgba(255, 255, 255, .16);
+  border: 0;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  transition: background .15s;
+}
+
+.chat-header .header-btn:hover { background: rgba(255, 255, 255, .3); }
+
+/* ── district picker ─────────────────────────────────────────────────────── */
+
+.district-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: var(--c-primary-soft);
+  border-bottom: 1px solid var(--c-border);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.district-bar label { color: var(--c-text-muted); white-space: nowrap; }
+
+.district-bar select {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 9px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--c-text);
+}
+
+/* ── messages ────────────────────────────────────────────────────────────── */
+
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px;
+  background: var(--c-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  /* الخلفية بتتحط على الحاوية نفسها عشان تفضل ثابتة والرسائل
+     تعدّي فوقها — لو اتحطت جوه المحتوى كانت هتتحرك مع الـscroll */
+  position: relative;
+  isolation: isolate;
+}
+
+/* ── قلعة قايتباي — خلفية صامتة ──────────────────────────────────
+   عنصر منفصل مش background-image عشان نتحكم في الشفافية لوحدها،
+   ونخلي الرسائل فوقها بـz-index من غير ما نلمس شفافيتها هي.       */
+.chat-body::after {
+  content: "";
+  position: sticky;      /* بتفضل في مكانها مع الـscroll */
+  bottom: 0;
+  margin-top: auto;      /* بتلزق تحت لما المحادثة قصيرة */
+  z-index: -1;
+  display: block;
+  width: 100%;
+  height: 132px;
+  flex-shrink: 0;
+
+  background: url("../images/qaitbay.svg") no-repeat bottom center;
+  background-size: contain;
+
+  /* الرسمة بـcurrentColor، والـmask بتحوّلها للون اللي إحنا عايزينه
+     بشفافية خفيفة — فبتشتغل في الفاتح والغامق من غير نسختين */
+  opacity: .085;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .chat-body::after { opacity: .14; }
+}
+
+/* الرسائل لازم تبقى فوق الخلفية */
+.msg, .chat-error, .typing { position: relative; z-index: 1; }
+
+.msg { display: flex; gap: 9px; max-width: 86%; }
+
+.msg.bot  { align-self: flex-start; }
+.msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+.msg .bubble {
+  padding: 11px 14px;
+  border-radius: var(--c-radius);
+  font-size: 14.5px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .05);
+}
+
+.msg.bot .bubble {
+  background: var(--c-bot-bg);
+  border: 1px solid var(--c-border);
+  border-start-start-radius: 5px;
+}
+
+.msg.user .bubble {
+  background: var(--c-user-bg);
+  color: var(--c-user-text);
+  border-start-end-radius: 5px;
+}
+
+.msg .who {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  background: var(--c-primary-soft);
+  color: var(--c-primary-dark);
+  align-self: flex-end;
+}
+
+.msg.user .who { background: #e2e8f0; color: var(--c-text-muted); }
+
+.msg .bubble strong { font-weight: 700; }
+
+/* رقم البلاغ / الموعد */
+.reference-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  padding: 7px 12px;
+  background: var(--c-primary-soft);
+  border: 1px dashed var(--c-primary);
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: .5px;
+  color: var(--c-primary-dark);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.reference-chip:active { transform: scale(.97); }
+
+.ticket-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 13px;
+  background: var(--c-primary);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ── typing indicator ────────────────────────────────────────────────────── */
+
+.typing { display: flex; gap: 4px; padding: 14px 16px; }
+
+.typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-text-muted);
+  opacity: .45;
+  animation: blink 1.3s infinite;
+}
+
+.typing span:nth-child(2) { animation-delay: .18s; }
+.typing span:nth-child(3) { animation-delay: .36s; }
+
+@keyframes blink {
+  0%, 60%, 100% { opacity: .25; transform: translateY(0); }
+  30%           { opacity: 1;   transform: translateY(-3px); }
+}
+
+/* ── quick replies ───────────────────────────────────────────────────────── */
+
+.quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 18px 12px;
+  background: var(--c-bg);
+  flex-shrink: 0;
+}
+
+.quick-replies button {
+  padding: 8px 14px;
+  border: 1px solid var(--c-primary);
+  background: #fff;
+  color: var(--c-primary-dark);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+
+.quick-replies button:hover {
+  background: var(--c-primary);
+  color: #fff;
+}
+
+/* ── composer ────────────────────────────────────────────────────────────── */
+
+.chat-footer {
+  padding: 12px 14px;
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border);
+  flex-shrink: 0;
+}
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 22px;
+  padding: 6px 8px 6px 6px;
+  transition: border-color .15s;
+}
+
+.composer:focus-within { border-color: var(--c-primary); }
+
+.composer textarea {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--c-text);
+  max-height: 110px;
+  padding: 6px 10px;
+}
+
+.composer button {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  transition: background .15s, opacity .15s;
+}
+
+.composer button:hover:not(:disabled) { background: var(--c-primary-dark); }
+.composer button:disabled { opacity: .45; cursor: default; }
+
+.chat-disclaimer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--c-text-muted);
+  margin-top: 8px;
+}
+
+/* ── errors ──────────────────────────────────────────────────────────────── */
+
+.chat-error {
+  align-self: center;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 9px 14px;
+  border-radius: 11px;
+  font-size: 13px;
+  max-width: 90%;
+  text-align: center;
+}
+
+/* ── dark mode ───────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-bg:         #0f172a;
+    --c-surface:    #1e293b;
+    --c-border:     #334155;
+    --c-text:       #e2e8f0;
+    --c-text-muted: #94a3b8;
+    --c-bot-bg:     #1e293b;
+    --c-primary-soft: #14342a;
+  }
+
+  .quick-replies button { background: var(--c-surface); color: #7dd3b0; }
+  .district-bar select  { background: var(--c-surface); color: var(--c-text); }
+  .chat-error { background: #431a1a; border-color: #7f1d1d; color: #fca5a5; }
+}
+
+/* ── small screens ───────────────────────────────────────────────────────── */
+
+@media (max-width: 520px) {
+  .msg { max-width: 92%; }
+  .chat-body { padding: 14px; }
+  .quick-replies { padding: 0 14px 10px; }
+}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, status_label, pager, empty_state %}
+
+{% block title %}المواعيد — {{ org_name }}{% endblock %}
+{% block topbar_title %}المواعيد{% endblock %}
+{% block topbar_sub %}مواعيد المواطنين لإنهاء المعاملات في الأحياء{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('create_appointment') }}" class="btn btn-primary btn-sm">
+    <i data-lucide="plus"></i> حجز يدوي
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+  <div class="toolbar">
+    <form method="GET" class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" name="search" class="search-input"
+             placeholder="ابحث برقم الموعد أو الاسم أو التليفون..."
+             value="{{ search }}">
+    </form>
+
+    <form method="GET" class="toolbar-filters">
+      <input type="hidden" name="search" value="{{ search }}">
+
+      <select name="status" class="form-control" onchange="this.form.submit()">
+        <option value="">كل الحالات</option>
+        {% for s in statuses %}
+          <option value="{{ s.value }}" {{ 'selected' if request.args.get('status') == s.value }}>
+            {{ status_label(s.value) }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <select name="district" class="form-control" onchange="this.form.submit()">
+        <option value="">كل الأحياء</option>
+        {% for d in districts %}
+          <option value="{{ d.id }}" {{ 'selected' if request.args.get('district')|int == d.id }}>
+            {{ d.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  {% if pagination and pagination.items %}
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>رقم الموعد</th>
+          <th>المواطن</th>
+          <th>الخدمة</th>
+          <th>الحي</th>
+          <th>الموعد</th>
+          <th>الحالة</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in pagination.items %}
+        <tr onclick="location.href='{{ url_for('appointment_detail', appointment_id=a.id) }}'"
+            style="cursor:pointer">
+          <td><strong>{{ a.reference_id }}</strong></td>
+          <td>
+            {{ a.name }}
+            <div style="color:var(--text-muted);font-size:.82rem">{{ a.phone_number }}</div>
+          </td>
+          <td>{{ a.details|truncate(40) if a.details else '—' }}</td>
+          <td>
+            {% if a.district %}{{ a.district.name }}
+            {% else %}<span class="field-missing">غير محدد</span>{% endif %}
+          </td>
+          <td>{{ a.date or '—' }}</td>
+          <td>{{ status_badge(a.status) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {{ pager(pagination, 'list_appointments', {'search': search}) }}
+
+  {% else %}
+    {{ empty_state('calendar-x', 'لا توجد مواعيد مطابقة') }}
+  {% endif %}
+
+</div>
+
+{% endblock %}

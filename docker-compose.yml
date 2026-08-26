@@ -1,0 +1,243 @@
+# ---------------------------------------------------------------------------
+# حي المنتزه الثانية — the whole system
+#
+#   nginx    TLS termination and the only thing exposed to the internet
+#   certbot  gets and renews the certificate
+#   web      this Next.js site
+#   agent    the citizen-service assistant (agent/) — complaints, appointments,
+#            tracking, and the knowledge base the chat answers from
+#   db       PostgreSQL 16 + pgvector, holding TWO databases:
+#              montazah_site  the website's bookings, messages and published content
+#              districts_db   the assistant's own store
+#
+# Only nginx publishes a port. The site, the assistant and the database have no
+# host port at all: everything a visitor needs arrives through nginx, so nothing
+# else has any reason to be reachable from outside the machine.
+#
+#   cp .env.example .env      # fill in the values it names
+#   docker compose up -d --build
+#
+#   npm run knowledge:export                                     # site → JSON
+#   docker compose exec agent flask import-site-knowledge        # JSON → agent
+#
+# The first `up` is slow: the assistant downloads a ~2.2GB embedding model
+# before gunicorn starts. It is cached in a volume, so later starts are quick.
+# ---------------------------------------------------------------------------
+
+# Named explicitly. Compose otherwise derives the project name from the folder,
+# and this folder's name is Arabic — every character of which Compose strips as
+# non-ASCII, leaving nothing and failing with "project name must not be empty".
+name: montazah-thani
+
+# Every service below names its environment key by key rather than loading
+# `.env` wholesale. That file holds the secrets of both halves of the system,
+# and `env_file: [.env]` puts the staff dashboard password inside the assistant
+# container and the Groq key inside the web container — neither of which has
+# any use for the other's. A container that is compromised should give up only
+# what it actually needed to do its job.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: montazah-thani-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-districts_db}
+      # Read by the init script below, which creates the website's database.
+      SITE_POSTGRES_DB: ${SITE_POSTGRES_DB:-montazah_site}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Creates montazah_site alongside the assistant's districts_db. The two
+      # must not share a database: the assistant has an `appointments` table of
+      # its own, and the site would adopt it. Postgres runs this only on the
+      # first start of an empty volume — see the script for the manual command
+      # if your pgdata already exists.
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  agent:
+    build: ./agent
+    container_name: montazah-thani-agent
+    restart: always
+    environment:
+      # --- required
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
+      GROQ_API_KEY: ${GROQ_API_KEY:?GROQ_API_KEY must be set}
+      SQLALCHEMY_DATABASE_URI: >-
+        postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-districts_db}
+      # --- models
+      GROQ_MODEL: ${GROQ_MODEL:-}
+      GROQ_MODEL_FALLBACKS: ${GROQ_MODEL_FALLBACKS:-}
+      # Keep GROQ_TIMEOUT x (GROQ_MAX_RETRIES + 1) below the 60s the site waits
+      # for one turn (lib/agent.ts), or a slow model reads to a resident as an
+      # outage while the assistant is still working.
+      GROQ_TIMEOUT: ${GROQ_TIMEOUT:-20}
+      GROQ_MAX_RETRIES: ${GROQ_MAX_RETRIES:-1}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+      EMBEDDING_CACHE_DIR: /app/.embedding_cache
+      # --- identity
+      ORG_NAME: ${ORG_NAME:-حي المنتزه الثانية — محافظة الإسكندرية}
+      ORG_SHORT: ${ORG_SHORT:-خدمة المواطن}
+      ORG_NAME_EN: ${ORG_NAME_EN:-El Montazah II District, Alexandria}
+      # --- hardening
+      # The site calls the assistant server-to-server, so no browser origin
+      # embeds it. Widen this only if you also embed its own chat bubble.
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-${NEXT_PUBLIC_SITE_URL:-http://localhost}}
+      CHAT_RATE_LIMIT: ${CHAT_RATE_LIMIT:-12}
+      # Unset here on purpose: on this network the assistant has no port on the
+      # host and nothing outside the compose project can route to it, so there
+      # is no caller left to authenticate. It exists for cloud deployments,
+      # where the ingress is public — see deploy/huggingface/.
+      AGENT_TOKEN: ${AGENT_TOKEN:-}
+      # 1 in production. 0 only for local development over plain http.
+      SECURE_COOKIES: ${SECURE_COOKIES:-1}
+      # --- optional email notifications
+      SMTP_SERVER: ${SMTP_SERVER:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      NOTIFICATION_EMAIL_SENDER: ${NOTIFICATION_EMAIL_SENDER:-}
+      NOTIFICATION_EMAIL_PASSWORD: ${NOTIFICATION_EMAIL_PASSWORD:-}
+      NOTIFICATION_EMAIL_RECEIVERS: ${NOTIFICATION_EMAIL_RECEIVERS:-}
+      SERVER_IDENTIFIER: ${SERVER_IDENTIFIER:-montazah-thani-agent}
+    volumes:
+      # Appointment cards are written here and read back through the site's
+      # /api/chat/ticket route, so they must outlive the container. Complaint
+      # attachments land here too — this volume holds residents' personal data
+      # and needs backing up and access-controlling like the databases.
+      - agent-uploads:/app/static/uploads
+      - embedding-cache:/app/.embedding_cache
+      # The knowledge export, mounted read-only so `flask import-site-knowledge`
+      # picks up a fresh `npm run knowledge:export` without a rebuild. The file
+      # itself, not the folder — the folder also holds the importer module, and
+      # a bind mount over it would shadow the code baked into the image.
+      - ./agent/site_knowledge/montazah-thani.json:/app/site_knowledge/montazah-thani.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4500/health']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      # The first boot downloads the embedding model before gunicorn starts.
+      start_period: 900s
+    networks: [internal]
+
+  web:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL must be set}
+        # The preflight blocks a build while development placeholders remain.
+        # Set this to 1 in .env for a staging build; leave it unset for production.
+        PREFLIGHT_ALLOW_PLACEHOLDERS: ${PREFLIGHT_ALLOW_PLACEHOLDERS:-}
+    container_name: montazah-thani-web
+    restart: always
+    # No host port. nginx reaches it by service name on the internal network,
+    # and nothing else should be able to reach it at all — going direct would
+    # skip TLS, and with it the staff dashboard's only protection.
+    expose:
+      - '3000'
+    environment:
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      # The site's OWN database, not the assistant's districts_db.
+      DATABASE_URL: >-
+        postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${SITE_POSTGRES_DB:-montazah_site}
+      ADMIN_USER: ${ADMIN_USER:?ADMIN_USER must be set}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}
+      # Reaching the assistant by service name keeps it off the public network.
+      AGENT_URL: http://agent:4500
+      AGENT_DISTRICT_ID: ${AGENT_DISTRICT_ID:-}
+      # Matched to the assistant's. Empty on both here; see the note there.
+      AGENT_TOKEN: ${AGENT_TOKEN:-}
+      # Only the fallback assistant. The site never receives GROQ_API_KEY.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      agent:
+        condition: service_started
+    networks: [internal]
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: montazah-thani-nginx
+    restart: always
+    ports:
+      - '${HTTP_PORT:-80}:80'
+      - '${HTTPS_PORT:-443}:443'
+    volumes:
+      # One file, chosen by NGINX_CONF: http-only.conf to bootstrap and to let
+      # certbot answer its first challenge, https.conf once the certificate
+      # exists. Never leave the public site on http-only — /admin sends its
+      # password on every request.
+      - ./docker/nginx/${NGINX_CONF:-http-only.conf}:/etc/nginx/conf.d/default.conf:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      web:
+        condition: service_started
+    # Reload every six hours so a certificate renewed overnight is picked up
+    # without anyone having to remember to restart nginx.
+    command: >-
+      /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g 'daemon off;'"
+    networks: [internal]
+
+  # The public door — Tailscale Funnel. An outbound-only tunnel to Tailscale's
+  # edge gives the district a permanent https://<node>.<tailnet>.ts.net address
+  # that survives every restart; nothing listens on the host and no router port
+  # is forwarded. It shares nginx's network namespace, so 127.0.0.1:80 inside
+  # this container IS nginx. TLS terminates on Tailscale's edge; the first boot
+  # needs one browser approval and later boots reuse the saved node state in
+  # the tailscale-state volume.
+  tunnel:
+    image: tailscale/tailscale:latest
+    container_name: montazah-thani-tunnel
+    restart: always
+    network_mode: 'service:nginx'
+    environment:
+      TS_USERSPACE: '1'
+      TS_STATE_DIR: /state
+      TS_HOSTNAME: montazah2
+      TS_SERVE_CONFIG: /serve.json
+      # Only consumed on the very first boot while the state volume is empty;
+      # later restarts authenticate from the saved node identity.
+      TS_AUTHKEY: ${TS_AUTHKEY:-}
+    volumes:
+      - tailscale-state:/state
+      - ./docker/tailscale/serve.json:/serve.json:ro
+    depends_on:
+      - nginx
+
+  # Renews the certificate twice a day; Let's Encrypt issues for 90 days and
+  # renews inside the last 30, so a machine that is off for a fortnight still
+  # catches up. The FIRST certificate is requested by hand — see the guide.
+  certbot:
+    image: certbot/certbot:latest
+    container_name: montazah-thani-certbot
+    restart: always
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: >-
+      /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done"
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  pgdata:
+  agent-uploads:
+  embedding-cache:
+  certbot-conf:
+  certbot-www:
+  nginx-logs:
+  tailscale-state:

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pager, empty_state %}
+
+{% block title %}المحادثات — {{ org_name }}{% endblock %}
+{% block topbar_title %}المحادثات{% endblock %}
+{% block topbar_sub %}كل جلسة شات على الموقع، بترتيب آخر نشاط{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+  <div class="toolbar">
+    <form method="GET" class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" name="search" class="search-input"
+             placeholder="ابحث بالاسم أو التليفون أو رقم الجلسة..."
+             value="{{ search }}">
+    </form>
+  </div>
+
+  {% if pagination and pagination.items %}
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>المواطن</th>
+          <th>الحي</th>
+          <th>عدد الرسائل</th>
+          <th>بدأت</th>
+          <th>آخر نشاط</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in pagination.items %}
+        <tr onclick="location.href='{{ url_for('conversation_detail', session_id=c.session_id) }}'"
+            style="cursor:pointer">
+          <td>
+            {{ c.name or 'زائر' }}
+            <div style="color:var(--text-muted);font-size:.82rem">
+              {{ c.phone or c.session_id[:12] }}
+            </div>
+          </td>
+          <td>{{ c.district.name if c.district else '—' }}</td>
+          <td>{{ c.message_count or 0 }}</td>
+          <td>{{ c.created_at.strftime('%Y-%m-%d') if c.created_at else '—' }}</td>
+          <td>{{ c.last_seen_at.strftime('%Y-%m-%d %H:%M') if c.last_seen_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {{ pager(pagination, 'list_conversations', {'search': search}) }}
+
+  {% else %}
+    {{ empty_state('messages-square', 'لا توجد محادثات بعد',
+                   'المحادثات هتظهر هنا أول ما مواطن يبدأ يكلم المساعد.') }}
+  {% endif %}
+
+</div>
+
+{% endblock %}

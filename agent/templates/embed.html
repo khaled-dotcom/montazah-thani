@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}تركيب الشات على الموقع — {{ org_name }}{% endblock %}
+{% block topbar_title %}تركيب الشات على الموقع{% endblock %}
+{% block topbar_sub %}سطر واحد بيحط فقاعة المساعد في أي موقع{% endblock %}
+
+{% block content %}
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="code-2"></i> الكود الأساسي</h2>
+  </div>
+  <div style="padding:24px">
+    <p style="line-height:1.9;margin-bottom:16px">
+      حط السطر ده قبل <code>&lt;/body&gt;</code> في أي صفحة، وهتلاقي فقاعة الشات
+      ظهرت في ركن الصفحة.
+    </p>
+
+    <div class="code-block" id="snippetBasic"><button type="button" class="code-copy" data-target="snippetBasic">نسخ</button>&lt;script src="{{ base_url }}/embed.js" defer&gt;&lt;/script&gt;</div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:22px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="building-2"></i> كود مخصّص لكل حي</h2>
+  </div>
+  <div style="padding:24px">
+    <p style="line-height:1.9;margin-bottom:16px">
+      لو الموقع بتاع حي معيّن، استخدم الكود بتاعه من الجدول. الفرق إن المساعد
+      هيعرف المواطن جاي من أنهي حي، فمش هيسأله، وهيرد ببيانات الحي ده مباشرة.
+    </p>
+
+    {% if districts %}
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr><th>الحي</th><th>الكود</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for d in districts %}
+          <tr>
+            <td><strong>{{ d.name }}</strong></td>
+            <td>
+              <code id="snippet-{{ d.id }}" style="font-size:.8rem;direction:ltr;display:inline-block">&lt;script src="{{ base_url }}/embed.js" data-district="{{ d.id }}" defer&gt;&lt;/script&gt;</code>
+            </td>
+            <td>
+              <button type="button" class="btn btn-sm btn-outline code-copy" data-target="snippet-{{ d.id }}">
+                نسخ
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p>ضيف الأحياء الأول من <a href="{{ url_for('list_districts') }}">صفحة الأحياء</a>.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:22px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="sliders-horizontal"></i> خيارات التخصيص</h2>
+  </div>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr><th>الخاصية</th><th>الوظيفة</th><th>الافتراضي</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>data-district</code></td>
+          <td>رقم الحي — عشان المساعد يعرف المواطن جاي منين</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><code>data-position</code></td>
+          <td>مكان الفقاعة: <code>left</code> أو <code>right</code></td>
+          <td><code>left</code></td>
+        </tr>
+        <tr>
+          <td><code>data-color</code></td>
+          <td>لون الفقاعة</td>
+          <td><code>#0d6e54</code></td>
+        </tr>
+        <tr>
+          <td><code>data-label</code></td>
+          <td>نص التلميح اللي بيظهر أول مرة</td>
+          <td>تحتاج مساعدة؟</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card" style="margin-top:22px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="maximize-2"></i> صفحة شات كاملة</h2>
+  </div>
+  <div style="padding:24px">
+    <p style="line-height:1.9;margin-bottom:16px">
+      لو عايز رابط مستقل بدل الفقاعة — مناسب للمشاركة على السوشيال أو كزر في القائمة:
+    </p>
+
+    <div class="code-block" id="snippetPage"><button type="button" class="code-copy" data-target="snippetPage">نسخ</button>{{ base_url }}/chat
+{{ base_url }}/chat?district=رقم_الحي</div>
+
+    <a href="{{ url_for('chat_page') }}" target="_blank" class="btn btn-outline" style="margin-top:16px">
+      <i data-lucide="external-link"></i> افتح الصفحة
+    </a>
+  </div>
+</div>
+
+<div class="alert-card alert-orange" style="margin-top:22px">
+  <div class="alert-icon"><i data-lucide="shield"></i></div>
+  <div>
+    <strong>قبل التشغيل الحقيقي:</strong>
+    حدّد المواقع المسموح لها في متغيّر البيئة <code>ALLOWED_ORIGINS</code>
+    (مثال: <code>https://alexandria.gov.eg,https://montaza.gov.eg</code>).
+    القيمة الافتراضية <code>*</code> بتسمح لأي موقع يركّب الشات.
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll('.code-copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+
+      // ننسخ نص العنصر من غير نص زرار النسخ نفسه
+      var text = target.textContent.replace(btn.textContent, '').trim();
+
+      navigator.clipboard.writeText(text).then(function () {
+        var original = btn.textContent;
+        btn.textContent = 'تم النسخ ✓';
+        setTimeout(function () { btn.textContent = original; }, 1600);
+      });
+    });
+  });
+</script>
+{% endblock %}

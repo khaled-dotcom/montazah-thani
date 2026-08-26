@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, status_label, transcript, delete_form %}
+
+{% block title %}بلاغ {{ complaint.reference_id }} — {{ org_name }}{% endblock %}
+{% block topbar_title %}بلاغ {{ complaint.reference_id }}{% endblock %}
+{% block topbar_sub %}{{ complaint.category.value if complaint.category else 'بلاغ' }}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('list_complaints') }}" class="btn btn-ghost btn-sm">
+    <i data-lucide="arrow-right"></i> رجوع
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="settings-grid">
+
+  <!-- ── تفاصيل البلاغ ──────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><i data-lucide="file-text"></i> تفاصيل البلاغ</h2>
+      {{ status_badge(complaint.status) }}
+    </div>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">رقم البلاغ</div>
+          <div class="info-value">{{ complaint.reference_id }}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">النوع</div>
+          <div class="info-value">{{ complaint.category.value if complaint.category else '—' }}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">الحي</div>
+          <div class="info-value">{{ complaint.district.name if complaint.district else 'غير محدد' }}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">الإدارة المختصة</div>
+          <div class="info-value">
+            {% if complaint.department %}
+              {{ complaint.department.name }}
+              <div style="font-size:.75rem;color:#10b981;font-weight:600;margin-top:3px">
+                ✓ تم التحويل
+                {{ complaint.routed_at.strftime('%Y-%m-%d %H:%M') if complaint.routed_at else '' }}
+              </div>
+              {% if complaint.department.phone %}
+                <div style="font-size:.78rem;color:var(--text-muted)">
+                  📞 {{ complaint.department.phone }}
+                </div>
+              {% endif %}
+            {% else %}
+              <span class="field-missing">⚠ غير محوّل</span>
+              {% if complaint.district %}
+                <div style="font-size:.75rem;margin-top:3px">
+                  <a href="{{ url_for('district_departments', district_id=complaint.district_id) }}">
+                    اضبط إدارات {{ complaint.district.name }}
+                  </a>
+                </div>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">تاريخ التسجيل</div>
+          <div class="info-value">
+            {{ complaint.created_at.strftime('%Y-%m-%d %H:%M') if complaint.created_at else '—' }}
+          </div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">اسم المواطن</div>
+          <div class="info-value">{{ complaint.citizen_name or '—' }}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">الرقم القومي</div>
+          <div class="info-value">{{ complaint.national_id or '—' }}</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">رقم التواصل</div>
+          <div class="info-value">
+            <a href="tel:{{ complaint.phone_number }}">{{ complaint.phone_number }}</a>
+          </div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-body">
+          <div class="info-label">الإيميل</div>
+          <div class="info-value">
+            {% if complaint.email %}
+              <a href="mailto:{{ complaint.email }}">{{ complaint.email }}</a>
+              <div style="font-size:.75rem;color:#10b981;font-weight:600;margin-top:3px">
+                ✓ بيستقبل تحديثات الحالة
+              </div>
+            {% else %}
+              <span style="color:var(--text-muted)">— لم يُسجَّل</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:0 20px 20px">
+      <div class="info-label" style="margin-bottom:6px">المكان بالتحديد</div>
+      <p style="line-height:1.9">{{ complaint.address or '— لم يُحدد —' }}</p>
+
+      <div class="info-label" style="margin:18px 0 6px">وصف المشكلة</div>
+      <p style="line-height:1.9;white-space:pre-wrap">{{ complaint.complaint_text }}</p>
+
+      {% if complaint.staff_note %}
+        <div class="info-label" style="margin:18px 0 6px">ملاحظة الموظف</div>
+        <p style="line-height:1.9;white-space:pre-wrap">{{ complaint.staff_note }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── الإجراءات ──────────────────────────────────────── -->
+  <div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title"><i data-lucide="settings-2"></i> تحديث الحالة</h2>
+      </div>
+      <form method="POST" action="{{ url_for('update_complaint_status', complaint_id=complaint.id) }}"
+            style="padding:20px">
+        <div class="form-group">
+          <label class="form-label" for="status">الحالة</label>
+          <select id="status" name="status" class="form-control">
+            {% for s in statuses %}
+              <option value="{{ s.value }}" {{ 'selected' if complaint.status == s }}>
+                {{ status_label(s.value) }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="staff_note">ملاحظة (تظهر للمواطن)</label>
+          <textarea id="staff_note" name="staff_note" class="form-control"
+                    placeholder="مثال: تم تحويل البلاغ لإدارة النظافة ورفع القمامة يوم الأحد.">{{ complaint.staff_note or '' }}</textarea>
+          <p class="form-hint">
+            المواطن بيشوف النص ده لما يسأل المساعد عن حالة بلاغه برقم البلاغ.
+            {% if complaint.email %}
+              <br><strong style="color:#047857">وهيوصله في الإيميل مع تغيير الحالة.</strong>
+            {% endif %}
+          </p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          <i data-lucide="check"></i> حفظ
+        </button>
+      </form>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <h2 class="card-title"><i data-lucide="git-branch"></i> تحويل لحي آخر</h2>
+      </div>
+      <form method="POST" action="{{ url_for('assign_complaint', complaint_id=complaint.id) }}"
+            style="padding:20px">
+        <div class="form-group">
+          <select name="district_id" class="form-control">
+            <option value="">غير محدد</option>
+            {% for d in districts %}
+              <option value="{{ d.id }}" {{ 'selected' if complaint.district_id == d.id }}>
+                {{ d.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-secondary btn-block">تحويل</button>
+      </form>
+    </div>
+
+    <div class="danger-zone" style="margin-top:20px">
+      <div class="danger-zone-header">
+        <div class="danger-zone-icon"><i data-lucide="alert-triangle"></i></div>
+        <div>
+          <div class="danger-zone-title">حذف البلاغ</div>
+          <div class="danger-zone-sub">لا يمكن التراجع بعد الحذف</div>
+        </div>
+      </div>
+      <div class="danger-zone-actions">
+        {{ delete_form(url_for('delete_complaint', complaint_id=complaint.id)) }}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ── نص المحادثة ──────────────────────────────────────── -->
+<div class="card" style="margin-top:22px">
+  <div class="card-header">
+    <h2 class="card-title"><i data-lucide="messages-square"></i> المحادثة الأصلية</h2>
+    {% if complaint.session_id %}
+      <a href="{{ url_for('conversation_detail', session_id=complaint.session_id) }}"
+         class="btn btn-sm btn-ghost">فتح الجلسة</a>
+    {% endif %}
+  </div>
+  <div style="padding:20px">
+    {{ transcript(chat_messages) }}
+  </div>
+</div>
+
+{% endblock %}

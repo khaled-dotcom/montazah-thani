@@ -1,0 +1,25 @@
+.git/
+.gitignore
+.env
+.env.example
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+venv/
+myenv/
+instance/
+static/uploads/
+
+*.log
+*.db
+*.sqlite3
+
+.claude/
+.agents/
+.gemini/
+
+# لقطات الشاشة بتاعة الـREADME — مالهاش لزمة جوه الصورة
+docs/

@@ -1,0 +1,37 @@
+node_modules/
+.next/
+out/
+build/
+.env
+.env*.local
+.env*
+next-env.d.ts
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+
+# Bookings database — never commit resident data
+data/
+
+# Database backups — resident data, same as data/
+backups/
+
+# Vercel
+.vercel
+
+# Agent env files — contain API keys and DB passwords
+agent/.env
+agent/.env*.local
+
+# Embedding model cache — 2.2GB, never commit
+agent/.embedding_cache/
+
+# Python cache
+agent/__pycache__/
+agent/**/__pycache__/
+*.pyc
+*.pyo
+
+# OS
+Thumbs.db
+.DS_Store

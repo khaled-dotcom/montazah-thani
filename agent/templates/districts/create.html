@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}إضافة حي — {{ org_name }}{% endblock %}
+{% block topbar_title %}إضافة حي{% endblock %}
+{% block topbar_sub %}البيانات دي بيقرأها المساعد ويرد بيها على المواطنين{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="POST" style="padding:24px">
+    {% set district = None %}
+    {% include "districts/_form.html" %}
+
+    <div style="display:flex;gap:10px;margin-top:24px">
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="save"></i> حفظ الحي
+      </button>
+      <a href="{{ url_for('list_districts') }}" class="btn btn-ghost">إلغاء</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

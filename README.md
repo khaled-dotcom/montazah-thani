@@ -1,5 +1,149 @@
 # حي المنتزه الثانية — El Montazah II District
 
+---
+
+## 🚀 نشر على سيرفر Linux (Production)
+
+> كل الأوامر جاهزة للنسخ واللصق — شغّلها بالترتيب على السيرفر Linux.
+
+### 1 — تثبيت Docker (لو مش موجود)
+
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER && newgrp docker
+```
+
+### 2 — Clone المشروع
+
+```bash
+git clone https://github.com/khaled-dotcom/montazah-thani.git /opt/montazah-thani
+cd /opt/montazah-thani
+```
+
+### 3 — إنشاء ملف `.env`
+
+```bash
+cat > .env << 'EOF'
+NEXT_PUBLIC_SITE_URL=https://montazah2.tail9286da.ts.net
+ADMIN_USER=admin
+ADMIN_PASSWORD=HOQ9cjRJGJZnRBqf5-NrBITMaT_v1bk8
+SECRET_KEY=b7f3c2a9e14d68f05a3c9b2e7d418f6c0a5e39d284b7c1f6e0a9d3b5c8f2e4a17
+GROQ_API_KEY=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
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=districts_local_pw
+POSTGRES_DB=districts_db
+SITE_POSTGRES_DB=montazah_site
+EMBEDDING_MODEL=intfloat/multilingual-e5-large
+GROQ_MODEL=openai/gpt-oss-120b
+GROQ_MODEL_FALLBACKS=openai/gpt-oss-20b,qwen/qwen3.6-27b
+GROQ_TIMEOUT=20
+GROQ_MAX_RETRIES=1
+ORG_NAME=حي المنتزه الثانية — محافظة الإسكندرية
+ORG_SHORT=خدمة المواطن
+ALLOWED_ORIGINS=https://montazah2.tail9286da.ts.net,https://wasat.alexandria.gov.eg
+CHAT_RATE_LIMIT=12
+SECURE_COOKIES=1
+ANTHROPIC_API_KEY=
+AGENT_URL=
+AGENT_DISTRICT_ID=
+DATABASE_URL=
+NGINX_CONF=http-only.conf
+HTTP_PORT=80
+HTTPS_PORT=443
+TS_AUTHKEY=tskey-auth-kpHaq51JWg11CNTRL-68BTLitB9mJe7AdRQXakkJBwMQhqKRmP6
+EOF
+```
+
+### 4 — إنشاء ملف `agent/.env`
+
+```bash
+cat > agent/.env << 'EOF'
+SECRET_KEY=b7f3c2a9e14d68f05a3c9b2e7d418f6c0a5e39d284b7c1f6e0a9d3b5c8f2e4a17
+SQLALCHEMY_DATABASE_URI=postgresql://postgres:districts_local_pw@db:5432/districts_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=districts_local_pw
+POSTGRES_DB=districts_db
+GROQ_API_KEY=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
+GROQ_MODEL=openai/gpt-oss-120b
+GROQ_MODEL_FALLBACKS=llama-3.3-70b-versatile,openai/gpt-oss-20b,llama-3.1-8b-instant
+EMBEDDING_MODEL=intfloat/multilingual-e5-large
+EMBEDDING_CACHE_DIR=./.embedding_cache
+ORG_NAME=حي المنتزه الثانية — محافظة الإسكندرية
+ORG_SHORT=خدمة المواطن
+ALLOWED_ORIGINS=https://montazah2.tail9286da.ts.net,https://wasat.alexandria.gov.eg
+CHAT_RATE_LIMIT=12
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=465
+NOTIFICATION_EMAIL_SENDER=kh01282688948@gmail.com
+NOTIFICATION_EMAIL_PASSWORD=mcqhmygeclbtthdj
+NOTIFICATION_EMAIL_RECEIVERS=kh01282688948@gmail.com
+SERVER_IDENTIFIER=montazah-thani-agent
+SECURE_COOKIES=1
+EOF
+```
+
+### 5 — بناء وتشغيل الكل
+
+```bash
+docker compose up -d --build
+```
+
+> أول تشغيل بطيء (~20 دقيقة) — بينزّل نموذج embeddings حجمه 2.2GB.
+> راقب الحالة بـ: `watch docker compose ps`
+
+### 6 — استيراد قاعدة المعرفة
+
+انتظر حتى يصبح `agent` بحالة `healthy` ثم:
+
+```bash
+docker compose exec agent flask import-site-knowledge
+```
+
+**احفظ الـ `district_id` الظاهر في المخرجات** ثم ضعه في `.env`:
+
+```bash
+# غيّر XXXXX بالقيمة الحقيقية
+sed -i 's/^AGENT_DISTRICT_ID=.*/AGENT_DISTRICT_ID=XXXXX/' .env
+docker compose up -d web
+```
+
+### 7 — التحقق
+
+```bash
+# الحاويات
+docker compose ps
+
+# صحة الموقع
+curl http://localhost/api/health
+
+# العنوان العام
+curl https://montazah2.tail9286da.ts.net/api/health
+```
+
+**النتيجة المتوقعة:**
+```json
+{ "status": "ok", "db": "connected", "assistant": { "reachable": true } }
+```
+
+### الروابط بعد التشغيل
+
+| الرابط | الوظيفة |
+|--------|---------|
+| `https://montazah2.tail9286da.ts.net` | الموقع العام |
+| `https://montazah2.tail9286da.ts.net/admin` | داشبورد الموظفين |
+| `https://montazah2.tail9286da.ts.net/api/health` | فحص الصحة |
+
+### في حالة وجود مشكلة
+
+```bash
+docker compose logs agent --tail=100 -f
+docker compose logs web   --tail=100
+docker compose logs nginx --tail=50
+docker compose logs tunnel --tail=50
+```
+
+---
+
 The official bilingual (Arabic-first, RTL) portal of **حي المنتزه الثانية**, the
 El Montazah II District of Alexandria Governorate, Egypt — the city's
 north-eastern shore: the royal Montazah Gardens and palaces, the Maamoura

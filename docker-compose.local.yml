@@ -1,0 +1,108 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.local.yml
+# تشغيل كامل 100% محلياً: Postgres + Agent + Web — بدون Neon أو Vercel
+#
+#   docker compose -f docker-compose.local.yml up -d --build
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# القيم الحساسة كلها بتتقرا من .env — الملف ده بيتحفظ في الريبو، و.env لأ.
+#   cp .env.example .env   ثم املأه
+name: montazah-local
+
+services:
+
+  # ── PostgreSQL مع pgvector ────────────────────────────────────────────────
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: montazah-local-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: districts_db
+      SITE_POSTGRES_DB: montazah_site
+    volumes:
+      - pgdata-local:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5433:5432"      # expose on 5433 so it doesn't clash with any system PG
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [local-net]
+
+  # ── المساعد الذكي (Python Flask + LangGraph) ────────────────────────────
+  agent:
+    build: ./agent
+    container_name: montazah-local-agent
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set in .env}
+      SQLALCHEMY_DATABASE_URI: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/districts_db
+      GROQ_API_KEY: ${GROQ_API_KEY:?GROQ_API_KEY must be set in .env}
+      GROQ_MODEL: openai/gpt-oss-120b
+      GROQ_MODEL_FALLBACKS: llama-3.3-70b-versatile,openai/gpt-oss-20b,llama-3.1-8b-instant
+      GROQ_TIMEOUT: "20"
+      GROQ_MAX_RETRIES: "1"
+      EMBEDDING_MODEL: intfloat/multilingual-e5-large
+      EMBEDDING_CACHE_DIR: /app/.embedding_cache
+      ORG_NAME: "حي المنتزه الثانية — محافظة الإسكندرية"
+      ORG_SHORT: "خدمة المواطن"
+      ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000,*"
+      CHAT_RATE_LIMIT: "60"
+      SECURE_COOKIES: "0"
+      TRUST_PROXY: "0"
+      PORT: "5000"
+      SMTP_SERVER: smtp.gmail.com
+      SMTP_PORT: "465"
+      NOTIFICATION_EMAIL_SENDER: ${NOTIFICATION_EMAIL_SENDER:-}
+      NOTIFICATION_EMAIL_PASSWORD: ${NOTIFICATION_EMAIL_PASSWORD:-}
+      NOTIFICATION_EMAIL_RECEIVERS: ${NOTIFICATION_EMAIL_RECEIVERS:-}
+      SERVER_IDENTIFIER: montazah-local-agent
+    ports:
+      - "5000:5000"
+    volumes:
+      - agent-uploads-local:/app/static/uploads
+      - embedding-cache-local:/app/.embedding_cache
+      - ./agent/site_knowledge/montazah-thani.json:/app/site_knowledge/montazah-thani.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [local-net]
+
+  # ── موقع الحي (Next.js) ──────────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: http://localhost:3000
+        PREFLIGHT_ALLOW_PLACEHOLDERS: "1"
+    container_name: montazah-local-web
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/montazah_site
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set in .env}
+      AGENT_URL: http://agent:5000
+      AGENT_DISTRICT_ID: "12"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      agent:
+        condition: service_started
+    networks: [local-net]
+
+networks:
+  local-net:
+    driver: bridge
+
+volumes:
+  pgdata-local:
+  agent-uploads-local:
+  embedding-cache-local:

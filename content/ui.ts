@@ -309,6 +309,25 @@ export const ui = {
   chatCopy: { ar: 'نسخ', en: 'Copy' },
   chatCopied: { ar: 'تم النسخ', en: 'Copied' },
 
+  // The booking / report form the assistant opens inside the panel. Field
+  // labels come from the assistant itself, in Arabic — these are the panel's
+  // own chrome around them.
+  chatFormRequired: { ar: 'مطلوب', en: 'Required' },
+  chatFormOptional: { ar: 'اختياري', en: 'Optional' },
+  chatFormChoose: { ar: 'اختر…', en: 'Choose…' },
+  chatFormPickDateFirst: { ar: 'اختر اليوم أولًا', en: 'Pick a day first' },
+  chatFormSending: { ar: 'جارٍ الحفظ…', en: 'Saving…' },
+  chatFormFix: {
+    ar: 'راجع الحقول المعلَّمة بالأحمر.',
+    en: 'Please check the fields marked in red.',
+  },
+  chatFormError: {
+    ar: 'تعذّر حفظ الطلب. حاول مرة أخرى.',
+    en: 'The request could not be saved. Please try again.',
+  },
+  chatFormDone: { ar: 'تم إرسال الطلب ✅', en: 'Submitted ✅' },
+  chatFormCancel: { ar: 'إلغاء', en: 'Cancel' },
+
   // Utility pages
   accessibilityTitle: { ar: 'إتاحة الوصول', en: 'Accessibility' },
   creditsTitle: { ar: 'حقوق الصور', en: 'Image credits' },

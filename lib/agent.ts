@@ -20,6 +20,8 @@ import 'server-only';
  * holds.
  */
 
+import type { AgentForm, AgentFormKind } from '@/lib/agent-types';
+
 const RAW_URL = process.env.AGENT_URL ?? '';
 
 /** Base URL of the assistant service, without a trailing slash. */
@@ -62,6 +64,9 @@ export function agentConfigured(): boolean {
   return agentUrl.length > 0;
 }
 
+/** The form shapes live in lib/agent-types.ts, which the browser can import. */
+export type { AgentForm, AgentFormField, AgentFormKind } from '@/lib/agent-types';
+
 /**
  * One conversation turn. The assistant is stateful — it keys the citizen's
  * identity, the draft request and the running summary off `sessionId` — so
@@ -74,6 +79,8 @@ export type AgentTurn = {
   reference: string | null;
   /** Set when the turn produced a downloadable appointment card. */
   ticketReference: string | null;
+  /** Set when the turn opened a form for the citizen to fill in. */
+  form: AgentForm | null;
 };
 
 /**
@@ -143,6 +150,7 @@ export async function askAgent(sessionId: string, message: string): Promise<Agen
     intent?: unknown;
     reference?: unknown;
     ticket_url?: unknown;
+    form?: unknown;
     message?: unknown;
   } | null;
 
@@ -162,6 +170,101 @@ export async function askAgent(sessionId: string, message: string): Promise<Agen
     intent: typeof data?.intent === 'string' ? data.intent : null,
     reference: typeof data?.reference === 'string' ? data.reference : null,
     ticketReference: ticketReferenceFrom(data?.ticket_url),
+    form: formFrom(data?.form),
+  };
+}
+
+/**
+ * Accept a form descriptor only if it has the parts the panel needs to draw
+ * something usable. A half-formed descriptor renders as an empty box with a
+ * submit button, which is worse than no form at all — the citizen presses it
+ * and nothing they typed is there.
+ */
+function formFrom(value: unknown): AgentForm | null {
+  if (!value || typeof value !== 'object') return null;
+
+  const form = value as Partial<AgentForm>;
+  if (form.kind !== 'appointment' && form.kind !== 'complaint') return null;
+  if (!Array.isArray(form.fields) || form.fields.length === 0) return null;
+  if (typeof form.title !== 'string' || typeof form.submitLabel !== 'string') return null;
+
+  return form as AgentForm;
+}
+
+/**
+ * Submit a form the assistant opened. This is the write path: the assistant
+ * re-validates every field and creates the appointment or complaint row, so
+ * nothing here is trusted beyond being forwarded.
+ */
+export async function submitAgentForm(
+  sessionId: string,
+  kind: AgentFormKind,
+  values: Record<string, string>,
+): Promise<
+  | { ok: true; turn: AgentTurn }
+  | { ok: false; status: number; message?: string; fields?: Record<string, string> }
+> {
+  if (!agentConfigured()) throw new AgentError('AGENT_URL is not set');
+
+  let response: Response;
+  try {
+    response = await fetch(`${agentUrl}/api/forms/${kind}`, {
+      method: 'POST',
+      headers: agentHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        session_id: sessionId,
+        values,
+        district_id: agentDistrictId,
+      }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      cache: 'no-store',
+    });
+  } catch (error) {
+    const timedOut = error instanceof Error && error.name === 'TimeoutError';
+    throw new AgentError(
+      timedOut
+        ? `the assistant did not answer within ${TIMEOUT_MS / 1000}s`
+        : 'the assistant is unreachable',
+      undefined,
+      undefined,
+      timedOut,
+    );
+  }
+
+  const data = (await response.json().catch(() => null)) as {
+    reply?: unknown;
+    intent?: unknown;
+    reference?: unknown;
+    ticket_url?: unknown;
+    message?: unknown;
+    fields?: unknown;
+  } | null;
+
+  if (!response.ok) {
+    /* A 422 is the citizen's own data coming back for correction, not a
+       fault: it carries a message per field and the panel marks each one. */
+    const fields =
+      data?.fields && typeof data.fields === 'object'
+        ? (data.fields as Record<string, string>)
+        : undefined;
+
+    return {
+      ok: false,
+      status: response.status,
+      message: typeof data?.message === 'string' ? data.message : undefined,
+      fields,
+    };
+  }
+
+  return {
+    ok: true,
+    turn: {
+      reply: typeof data?.reply === 'string' ? data.reply.trim() : '',
+      intent: typeof data?.intent === 'string' ? data.intent : null,
+      reference: typeof data?.reference === 'string' ? data.reference : null,
+      ticketReference: ticketReferenceFrom(data?.ticket_url),
+      form: null,
+    },
   };
 }
 

@@ -199,7 +199,7 @@ html, body {
 }
 
 /* الرسائل لازم تبقى فوق الخلفية */
-.msg, .chat-error, .typing { position: relative; z-index: 1; }
+.msg, .chat-error, .typing, .chat-form, .cf-done { position: relative; z-index: 1; }
 
 .msg { display: flex; gap: 9px; max-width: 86%; }
 
@@ -277,6 +277,120 @@ html, body {
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
+}
+
+/* ── فورم الحجز / البلاغ ─────────────────────────────────────────────────────
+   البوت بيفتح فورم بدل ما يسأل على الحقول واحد واحد. بيتحط جوه المحادثة
+   زي رسالة من البوت، فبياخد نفس المحاذاة والعرض. */
+
+.chat-form {
+  /* stretch مش flex-start: الفورم عايز عرض أكتر من الفقاعة، وفي الـwidget
+     الضيّق النسبة المئوية كانت هتخنق خانة الاسم */
+  align-self: stretch;
+  margin-inline-start: 39px;   /* بمحاذاة فقاعة البوت، بعد الأڤاتار */
+  padding: 14px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius);
+  box-shadow: var(--c-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.cf-title { margin: 0; font-size: 15px; font-weight: 700; }
+.cf-intro { margin: -6px 0 0; font-size: 12.5px; color: var(--c-text-muted); }
+
+.cf-row { display: flex; flex-direction: column; gap: 4px; }
+
+.cf-label { font-size: 12.5px; font-weight: 700; }
+.cf-req   { color: #b91c1c; }
+.cf-opt   { font-weight: 400; color: var(--c-text-muted); }
+.cf-hint  { margin: 0; font-size: 11.5px; color: var(--c-text-muted); }
+.cf-fixed { margin: 0; font-size: 14px; font-weight: 600; }
+
+.cf-error {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.cf-control {
+  width: 100%;
+  padding: 9px 11px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--c-text);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+}
+
+.cf-control:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+
+textarea.cf-control { resize: vertical; min-height: 62px; }
+
+/* قايمة الأيام والمواعيد. بتتقصّ بارتفاع عشان ٢١ يوم ما ياخدوش
+   المحادثة كلها، والباقي بيتشاف بالتمرير */
+.cf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 112px;
+  overflow-y: auto;
+}
+
+.cf-chip {
+  padding: 7px 11px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--c-text);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.cf-chip:hover { background: var(--c-primary-soft); }
+
+.cf-chip.is-on {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #fff;
+}
+
+.cf-submit {
+  margin-top: 2px;
+  padding: 11px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--c-primary);
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+}
+
+.cf-submit:disabled { opacity: .6; cursor: default; }
+
+.cf-done {
+  align-self: flex-start;
+  max-width: calc(86% - 39px);
+  margin: 0;
+  margin-inline-start: 39px;
+  padding: 10px 13px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
 }
 
 /* ── typing indicator ────────────────────────────────────────────────────── */

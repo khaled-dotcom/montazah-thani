@@ -24,7 +24,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
               src="/images/logo.png"
               alt=""
               width={960}
-              height={615}
+              height={534}
               unoptimized
               className="mb-4 h-12 w-auto rounded-md ring-1 ring-white/25"
             />

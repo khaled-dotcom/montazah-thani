@@ -28,9 +28,23 @@ class DistrictService:
                                     success_msg="تم العثور على الأحياء")
 
     @staticmethod
-    def get_all_flat():
-        """Unpaginated list — used for dropdowns."""
-        return District.query.order_by(District.name.asc()).all()
+    def get_all_flat(active_only: bool = False):
+        """
+        Unpaginated list — used for dropdowns.
+
+        The dashboard wants every district, retired ones included: a clerk
+        filtering complaints has to be able to reach the rows already filed
+        against a district that has since been merged away, and reactivating
+        one is impossible if it cannot be seen.
+
+        Anything the citizen picks from passes `active_only=True`. Offering
+        them a retired district files their report against a record nobody
+        watches — which is the whole reason a district gets retired.
+        """
+        query = District.query
+        if active_only:
+            query = query.filter(District.is_active.is_(True))
+        return query.order_by(District.name.asc()).all()
 
     @staticmethod
     def get_by_id(district_id):

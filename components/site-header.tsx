@@ -22,7 +22,7 @@ function Crest({ className = 'h-10 w-auto' }: { className?: string }) {
       src="/images/logo.png"
       alt=""
       width={960}
-      height={615}
+      height={534}
       unoptimized
       loading="eager"
       fetchPriority="high"

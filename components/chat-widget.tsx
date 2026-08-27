@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { ChatForm, type SubmittedForm } from '@/components/chat-form';
 import { ui } from '@/content/ui';
+import type { AgentForm } from '@/lib/agent-types';
 import { link, type Locale } from '@/lib/i18n';
 
 type Source = { title: string; href: string; type: string };
@@ -18,6 +20,10 @@ type Message = {
   reference?: string | null;
   /** Same-origin URL of the appointment card, when one was produced. */
   ticketUrl?: string | null;
+  /** A booking or report form the assistant opened under this reply. */
+  form?: AgentForm | null;
+  /** Set once the form above has been submitted, so it stops being editable. */
+  formDone?: boolean;
 };
 
 const CONSENT_KEY = 'hw-assistant-consent';
@@ -203,6 +209,7 @@ export function ChatWidget({
           mode?: Mode;
           reference?: string | null;
           ticketUrl?: string | null;
+          form?: AgentForm | null;
         } | null;
 
         if (!response.ok) {
@@ -214,8 +221,18 @@ export function ChatWidget({
           return;
         }
 
+        const form = data?.form ?? null;
+
         setMessages((prev) => [
-          ...prev,
+          /* Only one live form of a kind at a time. Someone who says "احجزلي
+             موعد" twice gets the newer form — with the slots as they are now
+             — rather than two identical boxes, either of which looks like the
+             one they should be filling in. */
+          ...(form
+            ? prev.map((m) =>
+                m.form && !m.formDone && m.form.kind === form.kind ? { ...m, form: null } : m,
+              )
+            : prev),
           {
             id: newId(),
             role: 'assistant',
@@ -224,6 +241,7 @@ export function ChatWidget({
             mode: data?.mode,
             reference: data?.reference ?? null,
             ticketUrl: data?.ticketUrl ?? null,
+            form,
           },
         ]);
       } catch {
@@ -237,6 +255,24 @@ export function ChatWidget({
     },
     [busy, locale, messages, sessionId],
   );
+
+  /* A submitted form is replaced in place by a short "sent" line, so the
+     citizen cannot fill the same one in twice, and the assistant's
+     confirmation — with the reference number they must keep — arrives as the
+     next message in the log. */
+  const onFormSubmitted = useCallback((messageId: string, result: SubmittedForm) => {
+    setMessages((prev) => [
+      ...prev.map((m) => (m.id === messageId ? { ...m, formDone: true } : m)),
+      {
+        id: newId(),
+        role: 'assistant',
+        content: result.reply,
+        mode: 'agent',
+        reference: result.reference,
+        ticketUrl: result.ticketUrl,
+      },
+    ]);
+  }, []);
 
   function acceptConsent() {
     setConsented(true);
@@ -410,6 +446,27 @@ export function ChatWidget({
                       }
                     >
                       <p className="whitespace-pre-wrap">{renderText(message.content)}</p>
+
+                      {/* The booking or report form, drawn from the descriptor
+                          the assistant sent. It replaces what used to be seven
+                          rounds of the assistant asking one field at a time. */}
+                      {message.role === 'assistant' &&
+                        message.form &&
+                        !message.formDone &&
+                        sessionId.length > 0 && (
+                          <ChatForm
+                            form={message.form}
+                            locale={locale}
+                            sessionId={sessionId}
+                            onSubmitted={(result) => onFormSubmitted(message.id, result)}
+                          />
+                        )}
+
+                      {message.role === 'assistant' && message.form && message.formDone && (
+                        <p className="mt-2 rounded-lg border border-line bg-canvas px-3 py-2 text-xs font-medium text-fg-muted">
+                          {message.form.title} — {ui.chatFormDone[locale]}
+                        </p>
+                      )}
 
                       {/* A reference number is the one thing in this panel the
                           person must not lose, so it gets its own block with a

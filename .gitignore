@@ -5,6 +5,10 @@ build/
 .env
 .env*.local
 .env*
+# ...but the templates must ship, or a fresh clone has nothing to copy from.
+# They hold key NAMES and comments only — never a value.
+!.env.example
+!agent/.env.example
 next-env.d.ts
 *.tsbuildinfo
 .DS_Store
@@ -22,9 +26,14 @@ backups/
 # Agent env files — contain API keys and DB passwords
 agent/.env
 agent/.env*.local
+!agent/.env.example
 
 # Embedding model cache — 2.2GB, never commit
 agent/.embedding_cache/
+
+# Python virtualenv — gigabytes, and machine-specific
+agent/.venv/
+agent/venv/
 
 # Python cache
 agent/__pycache__/

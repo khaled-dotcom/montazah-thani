@@ -25,7 +25,7 @@ import type { NextRequest } from 'next/server';
 /* Header values are Latin-1 only: an em dash or an Arabic letter here throws
    before the 401 is ever sent, and the browser gets a 500 with no login prompt.
    Keep this ASCII. */
-const REALM = 'Hay Wasat staff';
+const REALM = 'Hay Montazah 2 staff';
 
 function unauthorized(message: string) {
   return new NextResponse(message, {

@@ -31,6 +31,7 @@ from flask_migrate import Migrate
 
 load_dotenv()
 
+from graph.forms import ValidationError as FormValidationError
 from knowledge.pipeline import regenerate, run_post_approval_stage, run_pre_approval_stage
 from knowledge.schemas import EntityType, GeneratedKnowledge, KnowledgeGenerationRequest
 from knowledge.vector_store import ensure_vector_table
@@ -39,7 +40,7 @@ from models.models import (
     Complaint, ComplaintCategory, ComplaintStatus, District, RateLimitHit,
     RequestCounter, UsageLog, User, db,
 )
-from service.message_processor import IncomingMessage, run_agent
+from service.message_processor import IncomingMessage, run_agent, submit_form
 from software_services.appointment_services import AppointmentService
 from software_services.citizen_services import CitizenService
 from software_services.city_service_services import CityServiceService
@@ -161,7 +162,12 @@ AGENT_TOKEN = os.environ.get("AGENT_TOKEN", "").strip()
 
 # المسارات اللي السر بيحميها. البطاقة فيها اسم المواطن وميعاده، فهي
 # مش أقل حساسية من المحادثة نفسها.
-_PROTECTED_PREFIXES = ("/api/chat", "/static/uploads/tickets/", "/whoami")
+_PROTECTED_PREFIXES = (
+    "/api/chat",
+    "/api/forms",
+    "/static/uploads/tickets/",
+    "/whoami",
+)
 
 
 @app.before_request
@@ -396,7 +402,7 @@ def chat_page():
     return render_template(
         "chat/page.html",
         district=district,
-        districts=DistrictService.get_all_flat(),
+        districts=DistrictService.get_all_flat(active_only=True),
     )
 
 
@@ -512,6 +518,83 @@ def api_chat():
         "intent":     result["intent"],
         "reference":  result["reference"],
         "ticket_url": result["ticket_url"],
+        # وصف الفورم اللي المفروض يترسم تحت الرد، أو None
+        "form":       result.get("form"),
+        "session_id": session_id,
+    })
+
+
+@app.route("/api/forms/<kind>", methods=["POST", "OPTIONS"])
+def api_form(kind):
+    """
+    استقبال فورم اتملى جوّه الشات — حجز موعد أو بلاغ.
+
+    ده مسار الكتابة الحقيقي للمواعيد والبلاغات. مفيش موديل بيشتغل هنا خالص:
+    كل حقل بيتراجع في graph/forms.py قدام قوايم الأحياء والخدمات والأيام
+    المفتوحة والخانات الفاضية، لأن المتصفح حر يبعت أي حاجة، والفورم اللي
+    اتعرض من دقايق ممكن يكون بايت.
+    """
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+    if kind not in ("appointment", "complaint"):
+        return jsonify({"error": "unknown_form", "message": "نوع طلب غير معروف"}), 404
+
+    payload = request.get_json(silent=True) or {}
+
+    session_id = str(payload.get("session_id") or "").strip()
+    values = payload.get("values")
+    district_id = payload.get("district_id")
+
+    if not session_id or not SESSION_ID_PATTERN.match(session_id):
+        return jsonify({"error": "invalid_session", "message": "جلسة غير صالحة"}), 400
+
+    if not isinstance(values, dict):
+        return jsonify({"error": "invalid_values", "message": "بيانات الفورم ناقصة"}), 400
+
+    try:
+        district_id = int(district_id) if district_id else None
+    except (TypeError, ValueError):
+        district_id = None
+
+    # نفس سقف الشات: إرسال فورم بيكتب صف في الداتا بيز وبيبعت إيميلات،
+    # فمش أقل حاجة للحماية من رسالة.
+    client_ip = (request.remote_addr or "").strip()
+
+    limited = _rate_limited(session_id)
+    if not limited and not getattr(g, "trusted_caller", False):
+        limited = _rate_limited(f"ip:{client_ip}")
+
+    if limited:
+        return jsonify({
+            "error": "rate_limited",
+            "message": "بعتّ طلبات كتير بسرعة. استنى شوية وحاول تاني.",
+        }), 429
+
+    try:
+        result = submit_form(session_id, kind, values, district_id=district_id)
+
+    except FormValidationError as e:
+        # 422 مش 400: الطلب مفهوم، الحقول هي اللي فيها مشكلة —
+        # والـ widget بيعلّم على كل حقل برسالته
+        return jsonify({
+            "error": "validation",
+            "message": "فيه حقول محتاجة مراجعة",
+            "fields": e.fields,
+        }), 422
+
+    except Exception as e:
+        app.logger.error("Form submission failed on %s: %s", kind, traceback.format_exc())
+        return jsonify({
+            "error": "server_error",
+            "message": "حصل خطأ أثناء الحفظ. ممكن تحاول تاني؟",
+        }), 500
+
+    return jsonify({
+        "reply":      result["reply"],
+        "intent":     result["intent"],
+        "reference":  result["reference"],
+        "ticket_url": result["ticket_url"],
         "session_id": session_id,
     })
 
@@ -546,7 +629,7 @@ def api_districts():
 
     return jsonify([
         {"id": d.id, "name": d.name, "zone": d.zone}
-        for d in DistrictService.get_all_flat()
+        for d in DistrictService.get_all_flat(active_only=True)
     ])
 
 

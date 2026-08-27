@@ -89,7 +89,19 @@ class AppointmentService:
     @staticmethod
     def create_appointment(name, phone_number, details=None, date=None,
                            district_name=None, national_id=None,
-                           session_id=None, comes_from="website", email=None):
+                           session_id=None, comes_from="website", email=None,
+                           service_name=None):
+        """
+        Books an appointment.
+
+        `service_name` is what to match against the service catalogue, when
+        that is narrower than `details`. The chat form puts the citizen's own
+        note after the service name — "ترخيص بناء أو ترميم — الدور الثاني" —
+        and matching the catalogue against the whole of that finds nothing, so
+        the booking would reach the dashboard unlinked to any service and the
+        clerk would not see the documents it needs. Callers with nothing extra
+        to add leave it unset and `details` is used, as before.
+        """
 
         if not name or not str(name).strip():
             return AppointmentResult(False, None, "اسم المواطن مطلوب")
@@ -108,9 +120,11 @@ class AppointmentService:
         # نحاول نربط الموعد بالخدمة المسجلة عشان لوحة التحكم تعرف
         # الأوراق المطلوبة من غير قراءة النص
         service_id = None
-        if details:
+        lookup = str(service_name or details or "").strip()
+
+        if lookup:
             service_query = CityService.query.filter(
-                CityService.name.ilike(f"%{str(details).strip()}%")
+                CityService.name.ilike(f"%{lookup}%")
             )
             if district_id:
                 service_query = service_query.filter(

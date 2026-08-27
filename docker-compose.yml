@@ -158,6 +158,13 @@ services:
       AGENT_TOKEN: ${AGENT_TOKEN:-}
       # Only the fallback assistant. The site never receives GROQ_API_KEY.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # The image runs the preflight again at start-up and refuses to serve if
+      # the deployment is half-configured — see the CMD in the Dockerfile. It
+      # documents this variable as the staging downgrade, but only the *build*
+      # stage was ever given it, so the runtime check could not be downgraded
+      # through compose at all and a staging stack just crash-looped.
+      # Unset in production, which is where it must stay.
+      PREFLIGHT_ALLOW_PLACEHOLDERS: ${PREFLIGHT_ALLOW_PLACEHOLDERS:-}
     depends_on:
       db:
         condition: service_healthy

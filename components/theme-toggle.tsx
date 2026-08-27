@@ -7,7 +7,7 @@ import type { Locale } from '@/lib/i18n';
 
 export type ThemeChoice = 'light' | 'dark' | 'system';
 
-export const THEME_KEY = 'hay-wasat-theme';
+export const THEME_KEY = 'montazah2-theme';
 
 /**
  * Runs before first paint, inlined into <head>, so the page never flashes the

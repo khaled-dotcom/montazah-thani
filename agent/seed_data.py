@@ -165,19 +165,30 @@ def seed_alexandria_districts():
     Inserts the district list. Existing districts are left untouched, so this
     is safe to re-run after you have already filled in contact details.
 
+    A district already loaded from a website export counts as existing even
+    though it is spelled differently — the governorate writes «حي المنتزه ثان»
+    and a district's own site writes «حي المنتزه الثانية». Matching on the
+    exact string alone created both, leaving one row with the services and
+    departments and another with nothing, either of which a citizen could be
+    routed to. `_district_key` compares the words that name the place, so
+    seeding and importing can run in either order and still produce one row.
+
     Returns (created_count, skipped_count).
     """
+    from site_knowledge.importer import _district_key
+
+    existing_keys = {_district_key(d.name) for d in District.query.all()}
+
     created = 0
     skipped = 0
 
     for name, zone in ALEXANDRIA_DISTRICTS:
-        existing = District.query.filter(District.name == name).first()
-
-        if existing:
+        if _district_key(name) in existing_keys:
             skipped += 1
             continue
 
         db.session.add(District(name=name, zone=zone))
+        existing_keys.add(_district_key(name))
         created += 1
 
     db.session.commit()

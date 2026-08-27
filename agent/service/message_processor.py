@@ -8,9 +8,10 @@ import os
 import re
 import uuid
 
+from graph import forms
 from graph.agent_graph import get_agent_graph
 from graph.agent_response import AgentResponse
-from graph.utils import count_request
+from graph.utils import count_request, generate_appointment_ticket
 from llm.model import get_model_name, get_pricing
 from models.models import UsageLog, db
 from software_services.citizen_services import CitizenService
@@ -37,7 +38,6 @@ def _calc_total_usage(result: dict) -> dict:
     breakdown. No DB writes here.
     """
     nodes = [
-        ("intake_usage",      result.get("intake_usage")),
         ("intent_usage",      result.get("intent_usage")),
         ("inquiry_usage",     result.get("inquiry_usage")),
         ("complaint_usage",   result.get("complaint_usage")),
@@ -152,7 +152,7 @@ def _log_metrics(message: "IncomingMessage", district_name, intent, usage: dict)
         pass
 
 
-def _save_ticket(reference_id: str, ticket_bytes: bytes) -> str | None:
+def save_ticket(reference_id: str, ticket_bytes: bytes) -> str | None:
     """
     Writes the appointment ticket PNG to disk and returns its public URL.
     Returns None if it could not be written — the reply still goes out, just
@@ -178,7 +178,7 @@ def _save_ticket(reference_id: str, ticket_bytes: bytes) -> str | None:
         return f"/static/uploads/tickets/{safe_reference}.png"
 
     except Exception as e:
-        print(f"[_save_ticket] Error: {e}")
+        print(f"[save_ticket] Error: {e}")
         return None
 
 
@@ -187,7 +187,11 @@ def run_agent(message: IncomingMessage) -> dict:
     Runs one conversation turn.
 
     Returns a dict ready to be serialised straight to the chat widget:
-        reply, intent, reference, ticket_url
+        reply, intent, reference, ticket_url, form
+
+    `form` is set when the turn opened a booking or complaint form. Nothing is
+    written to the appointments or complaints tables here — that happens when
+    the citizen submits the form, through /api/forms.
     """
     citizen = CitizenService.get_or_create(
         session_id=message.session_id,
@@ -204,18 +208,12 @@ def run_agent(message: IncomingMessage) -> dict:
         district = DistrictDataService.get_district(district_id)
         district_name = district.name if district else None
 
+    # الهوية بتتقرا عشان الفورمات تتعرض متملّية بيها، مش عشان تتحط شرط
+    # على المحادثة — المواطن بيسأل ويتجاوب معاه سواء بياناته متسجلة أو لأ
     identity = CitizenService.get_identity(message.session_id)
-    identity_complete = all(identity.get(k) for k in ("name", "national_id", "phone"))
+    draft = (citizen.draft if citizen else None) or {}
 
     user_text = message.text or ""
-
-    # بعد ما التسجيل يخلص، أول رسالة بعده بتحمل معاها الطلب اللي المواطن
-    # قاله قبل ما نوقفه للتسجيل — عشان ما يضطرش يعيده
-    draft = (citizen.draft if citizen else None) or {}
-    pending = draft.get("pending_request")
-
-    if identity_complete and pending:
-        user_text = f"{user_text}\n\n[طلب سابق من نفس المواطن]: {pending}"
 
     CitizenService.log_message(message.session_id, "user", message.text)
 
@@ -230,7 +228,6 @@ def run_agent(message: IncomingMessage) -> dict:
         "active_flow":      citizen.active_flow if citizen else None,
         "draft":            draft,
         "identity":         identity,
-        "identity_complete": identity_complete,
 
         "intent": None,
         "refined_queries": [],
@@ -240,6 +237,7 @@ def run_agent(message: IncomingMessage) -> dict:
         "top_score": 0.0,
 
         "response": None,
+        "form": None,
 
         "intent_usage": None,
         "inquiry_usage": None,
@@ -276,6 +274,7 @@ def run_agent(message: IncomingMessage) -> dict:
             "intent": None,
             "reference": None,
             "ticket_url": None,
+            "form": None,
         }
 
     intent = result.get("intent")
@@ -296,7 +295,7 @@ def run_agent(message: IncomingMessage) -> dict:
         or result.get("complaint_reference")
     )
 
-    ticket_url = _save_ticket(
+    ticket_url = save_ticket(
         result.get("appointment_reference"),
         result.get("appointment_ticket"),
     )
@@ -308,6 +307,88 @@ def run_agent(message: IncomingMessage) -> dict:
         "intent": intent,
         "reference": reference,
         "ticket_url": ticket_url,
+        "form": response_obj.form,
+    }
+
+
+def submit_form(session_id: str, kind: str, values: dict,
+                district_id=None) -> dict:
+    """
+    Records a form the citizen filled in inside the chat.
+
+    This is the write path for appointments and complaints — no model runs
+    here, and none has a say in whether the record is created. Everything is
+    re-validated in graph/forms.py against the district list, the service
+    list, the open days and the free slots, because the browser is free to
+    post whatever it likes and the last turn's form may be minutes stale.
+
+    Both sides of the exchange are written to the transcript, so a clerk
+    reading the conversation later sees the submission where it happened
+    rather than a silent gap between two chat messages.
+    """
+    citizen = CitizenService.get_or_create(session_id=session_id, district_id=district_id)
+
+    district_id = district_id or (citizen.district_id if citizen else None)
+    district_name = None
+
+    if district_id:
+        from graph.prompt_service.district_data import DistrictDataService
+        district = DistrictDataService.get_district(district_id)
+        district_name = district.name if district else None
+
+    if kind == "appointment":
+        result = forms.submit_appointment(
+            session_id, values,
+            district_name=district_name,
+            district_id=district_id,
+        )
+    elif kind == "complaint":
+        result = forms.submit_complaint(
+            session_id, values,
+            district_name=district_name,
+        )
+    else:
+        raise ValueError(f"unknown form kind: {kind}")
+
+    label = "حجز موعد" if kind == "appointment" else "بلاغ"
+    CitizenService.log_message(session_id, "user", f"[أرسل فورم {label}]")
+    CitizenService.log_message(session_id, "bot", result["reply"], intent=kind)
+
+    # الملخص بيتحدّث بالكود عشان لو المواطن كمّل كلام بعد كده، الموديل يبقى
+    # عارف إن الطلب اتسجّل خلاص وما يفتحش فورم تاني من نفس النوع
+    try:
+        CitizenService.update_memory(
+            session_id=session_id,
+            summary=(
+                f"The citizen submitted the {kind} form. It is saved with "
+                f"reference {result['reference']}. Do not open another "
+                f"{kind} form unless they explicitly ask for a new one."
+            ),
+            last_bot_message=result["reply"],
+            active_flow=None,
+            draft=None,
+        )
+    except Exception as e:
+        print(f"[submit_form] Persist error: {e}")
+
+    ticket_url = None
+    ticket = result.get("ticket")
+
+    if ticket:
+        try:
+            ticket_url = save_ticket(
+                result["reference"],
+                generate_appointment_ticket(**ticket),
+            )
+        except Exception as e:
+            # البطاقة زينة، مش الحجز. الحجز اتسجّل خلاص ورقمه مع المواطن
+            print(f"[submit_form] Ticket error: {e}")
+
+    return {
+        "reply": result["reply"],
+        "reference": result["reference"],
+        "ticket_url": ticket_url,
+        "intent": kind,
     }
 
 

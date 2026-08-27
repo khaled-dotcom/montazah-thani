@@ -2,144 +2,160 @@
 
 ---
 
-## 🚀 نشر على سيرفر Linux (Production)
+## 🚀 Deploy on a Linux server
 
-> كل الأوامر جاهزة للنسخ واللصق — شغّلها بالترتيب على السيرفر Linux.
+Run these in order on the server. Nothing here contains a credential: every
+secret is generated on the machine or pasted in by you, and `.env` is
+git-ignored so it never travels with the repository.
 
-### 1 — تثبيت Docker (لو مش موجود)
+### 1 — Install Docker
 
 ```bash
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER && newgrp docker
 ```
 
-### 2 — Clone المشروع
+### 2 — Clone
 
 ```bash
 git clone https://github.com/khaled-dotcom/montazah-thani.git /opt/montazah-thani
 cd /opt/montazah-thani
 ```
 
-### 3 — إنشاء ملف `.env`
+### 3 — Create the two env files
+
+Both templates ship with the repository. They carry the variable names and the
+notes explaining each one, and no values at all — copy them and fill in:
 
 ```bash
-cat > .env << 'EOF'
-NEXT_PUBLIC_SITE_URL=https://montazah2.tail9286da.ts.net
-ADMIN_USER=admin
-ADMIN_PASSWORD=HOQ9cjRJGJZnRBqf5-NrBITMaT_v1bk8
-SECRET_KEY=b7f3c2a9e14d68f05a3c9b2e7d418f6c0a5e39d284b7c1f6e0a9d3b5c8f2e4a17
-GROQ_API_KEY=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
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=districts_local_pw
-POSTGRES_DB=districts_db
-SITE_POSTGRES_DB=montazah_site
-EMBEDDING_MODEL=intfloat/multilingual-e5-large
-GROQ_MODEL=openai/gpt-oss-120b
-GROQ_MODEL_FALLBACKS=openai/gpt-oss-20b,qwen/qwen3.6-27b
-GROQ_TIMEOUT=20
-GROQ_MAX_RETRIES=1
-ORG_NAME=حي المنتزه الثانية — محافظة الإسكندرية
-ORG_SHORT=خدمة المواطن
-ALLOWED_ORIGINS=https://montazah2.tail9286da.ts.net,https://wasat.alexandria.gov.eg
-CHAT_RATE_LIMIT=12
-SECURE_COOKIES=1
-ANTHROPIC_API_KEY=
-AGENT_URL=
-AGENT_DISTRICT_ID=
-DATABASE_URL=
-NGINX_CONF=http-only.conf
-HTTP_PORT=80
-HTTPS_PORT=443
-TS_AUTHKEY=tskey-auth-kpHaq51JWg11CNTRL-68BTLitB9mJe7AdRQXakkJBwMQhqKRmP6
-EOF
+cp .env.example .env
+cp agent/.env.example agent/.env
 ```
 
-### 4 — إنشاء ملف `agent/.env`
+**Generate the secrets on the server** rather than reusing any you have seen
+written down anywhere:
 
 ```bash
-cat > agent/.env << 'EOF'
-SECRET_KEY=b7f3c2a9e14d68f05a3c9b2e7d418f6c0a5e39d284b7c1f6e0a9d3b5c8f2e4a17
-SQLALCHEMY_DATABASE_URI=postgresql://postgres:districts_local_pw@db:5432/districts_db
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=districts_local_pw
-POSTGRES_DB=districts_db
-GROQ_API_KEY=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
-GROQ_MODEL=openai/gpt-oss-120b
-GROQ_MODEL_FALLBACKS=llama-3.3-70b-versatile,openai/gpt-oss-20b,llama-3.1-8b-instant
-EMBEDDING_MODEL=intfloat/multilingual-e5-large
-EMBEDDING_CACHE_DIR=./.embedding_cache
-ORG_NAME=حي المنتزه الثانية — محافظة الإسكندرية
-ORG_SHORT=خدمة المواطن
-ALLOWED_ORIGINS=https://montazah2.tail9286da.ts.net,https://wasat.alexandria.gov.eg
-CHAT_RATE_LIMIT=12
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=465
-NOTIFICATION_EMAIL_SENDER=kh01282688948@gmail.com
-NOTIFICATION_EMAIL_PASSWORD=mcqhmygeclbtthdj
-NOTIFICATION_EMAIL_RECEIVERS=kh01282688948@gmail.com
-SERVER_IDENTIFIER=montazah-thani-agent
-SECURE_COOKIES=1
-EOF
+# Flask session signing key — the same value goes in BOTH files
+SECRET=$(openssl rand -hex 32)
+sed -i "s|^SECRET_KEY=.*|SECRET_KEY=$SECRET|" .env agent/.env
+
+# Postgres password — the same value in both
+PGPW=$(openssl rand -base64 24 | tr -d '/+=')
+sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$PGPW|" .env agent/.env
+
+# Staff dashboard password — 16 characters minimum, no lockout protects it
+sed -i "s|^ADMIN_PASSWORD=.*|ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=')|" .env
 ```
 
-### 5 — بناء وتشغيل الكل
+Then open `.env` and set the rest by hand:
+
+| Variable | What it is |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | The public `https://` address. **Baked into the image at build time** — changing it later needs a rebuild, not a restart. |
+| `GROQ_API_KEY` | From <https://console.groq.com/keys>. Goes in **both** `.env` and `agent/.env`. |
+| `ORG_NAME` | The district's name as citizens should see it in the assistant's replies. |
+| `ALLOWED_ORIGINS` | The site's own origin. Never leave `*` in production. |
+| `NGINX_CONF` | `http-only.conf` before TLS is issued, `default.conf` after. |
+| `TS_AUTHKEY` | Only if you publish through Tailscale — generate a fresh key per host. |
+
+`agent/.env` additionally takes the SMTP account used to notify departments and
+citizens. Use an app password, never the mailbox's own password.
+
+> Every value above is a credential. Keep them out of the repository, out of
+> chat messages and out of screenshots — and if one is ever pasted somewhere
+> public, rotate it rather than deleting the message.
+
+### 4 — Build and start
 
 ```bash
 docker compose up -d --build
 ```
 
-> أول تشغيل بطيء (~20 دقيقة) — بينزّل نموذج embeddings حجمه 2.2GB.
-> راقب الحالة بـ: `watch docker compose ps`
+The first run takes roughly 20 minutes: it downloads a 2.2 GB embeddings
+model. Watch it with `watch docker compose ps` until `agent` is `healthy`.
 
-### 6 — استيراد قاعدة المعرفة
+The containers refuse to start on a half-configured deployment — a missing
+database URL, a dashboard password under 16 characters, a site URL still on
+`localhost`. That is deliberate; fix what it names. For a throwaway staging
+box only, `PREFLIGHT_ALLOW_PLACEHOLDERS=1` in `.env` downgrades the check.
 
-انتظر حتى يصبح `agent` بحالة `healthy` ثم:
+### 5 — Load the district's data
+
+Once `agent` is healthy:
 
 ```bash
+# The 11 Alexandria districts, names only
+docker compose exec agent flask seed-districts
+
+# This district's services, descriptions and search vectors, from content/
 docker compose exec agent flask import-site-knowledge
+
+# One department per complaint category, so complaints route themselves
+docker compose exec agent flask seed-departments
 ```
 
-**احفظ الـ `district_id` الظاهر في المخرجات** ثم ضعه في `.env`:
+`import-site-knowledge` prints the district's row id. The site has to be told
+which district it speaks for, or complaints are filed with no district and
+reach no department:
 
 ```bash
-# غيّر XXXXX بالقيمة الحقيقية
-sed -i 's/^AGENT_DISTRICT_ID=.*/AGENT_DISTRICT_ID=XXXXX/' .env
+DISTRICT_ID=$(docker compose exec -T agent python -c \
+  "from app import app; from models.models import District; \
+   app.app_context().push(); \
+   print(District.query.filter(District.name.like('%المنتزه الثانية%')).first().id)")
+
+sed -i "s|^AGENT_DISTRICT_ID=.*|AGENT_DISTRICT_ID=$DISTRICT_ID|" .env
 docker compose up -d web
 ```
 
-### 7 — التحقق
+### 6 — Create the dashboard account
+
+The assistant's own dashboard — complaints, conversations, services — has no
+user until you make one. It prompts for the password, so it is never written
+to a file or a shell history:
 
 ```bash
-# الحاويات
+docker compose exec agent flask create-admin --username admin --district $DISTRICT_ID
+```
+
+### 7 — Check it
+
+```bash
 docker compose ps
-
-# صحة الموقع
-curl http://localhost/api/health
-
-# العنوان العام
-curl https://montazah2.tail9286da.ts.net/api/health
+curl -s http://localhost/api/health
 ```
 
-**النتيجة المتوقعة:**
+Expected:
+
 ```json
-{ "status": "ok", "db": "connected", "assistant": { "reachable": true } }
+{"status":"ok","database":{"ok":true,"writable":true},
+ "assistant":{"configured":true,"reachable":true},"search":{"docs":58,"ok":true}}
 ```
 
-### الروابط بعد التشغيل
-
-| الرابط | الوظيفة |
-|--------|---------|
-| `https://montazah2.tail9286da.ts.net` | الموقع العام |
-| `https://montazah2.tail9286da.ts.net/admin` | داشبورد الموظفين |
-| `https://montazah2.tail9286da.ts.net/api/health` | فحص الصحة |
-
-### في حالة وجود مشكلة
+Then ask the assistant something a resident would, and confirm it answers from
+the district's own record instead of asking who you are:
 
 ```bash
-docker compose logs agent --tail=100 -f
-docker compose logs web   --tail=100
-docker compose logs nginx --tail=50
-docker compose logs tunnel --tail=50
+curl -s -X POST http://localhost/api/chat -H 'Content-Type: application/json' \
+  -d '{"sessionId":"checkcheckcheck1","locale":"ar",
+       "messages":[{"role":"user","content":"عايز اطلع رخصة محل، محتاج ايه ورق؟"}]}'
+```
+
+### Where things are
+
+| URL | What |
+|---|---|
+| `/` | The public site |
+| `/admin` | Staff dashboard — bookings and messages |
+| `/api/health` | Health check, including a database write probe |
+
+### When something is wrong
+
+```bash
+docker compose logs agent  --tail=100 -f
+docker compose logs web    --tail=100
+docker compose logs nginx  --tail=50
 ```
 
 ---
@@ -345,6 +361,7 @@ app/
     about/ landmarks/ services/ news/ events/ map/ directory/
     gallery/ search/ contact/ accessibility/ privacy/ laws/ credits/ appointments/
   api/chat/            assistant endpoint — agent service, or Claude, or retrieval alone
+  api/chat/form/       submits a booking or report form the assistant opened in the panel
   api/chat/ticket/     proxies the assistant's appointment card (same-origin)
   api/contact/         contact & issue-report intake → stored, shown at /admin/messages
   api/appointments/    counter booking + slot availability (+ /slots)
@@ -442,6 +459,16 @@ at `/search`.
 `llm` (answers from these pages only), `local` (returns retrieved passages).
 Grounding rule for every mode: facts come only from retrieved passages — a
 portal that invents a fee does real damage.
+
+In `agent` mode a turn can also come back with a **form** — the panel draws it
+under the reply, and `POST /api/chat/form` submits it. Booking and reporting
+each need seven fields, and collecting those by conversation was seven rounds
+in which the assistant could ask again for something already given, or read a
+stray "تمام" as consent to file a report under someone's name. The form shows
+every field at once and the assistant re-validates all of them before it writes
+a row, so no model decides whether a record is created. Everything else — asking
+about a fee, the opening hours, where to go — is answered without asking the
+resident who they are.
 
 The knowledge base flows one way:
 
@@ -547,7 +574,10 @@ that will run a container — which is how production runs today:
 | both databases | One Neon project, two databases: `montazah_site` for the site, `districts_db` with pgvector for the assistant. |
 
 ```bash
-HF_TOKEN=hf_xxx ./deploy/huggingface/deploy.sh <owner>/<space-name>
+# A Hugging Face write token for the Space — create one at
+# https://huggingface.co/settings/tokens and export it in the shell
+# that runs deploy.sh. Never commit it.
+export HF_TOKEN=hf_...
 ```
 
 The Space Dockerfile differs from `agent/Dockerfile` in two ways: it binds

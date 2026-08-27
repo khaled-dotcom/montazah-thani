@@ -10,6 +10,8 @@ class AgentResponse:
     appointment_saved:     Optional[bool]
     complaint_reference:   Optional[str]
     appointment_reference: Optional[str]
+    # وصف الفورم اللي بيتعرض تحت الرد، أو None — شكله في graph/forms.py
+    form:                  Optional[dict]
     usage:                 dict
 
     @staticmethod
@@ -29,6 +31,7 @@ class AgentResponse:
             appointment_saved     = result.get("appointment_saved"),
             complaint_reference   = result.get("complaint_reference"),
             appointment_reference = result.get("appointment_reference"),
+            form                  = result.get("form"),
             usage                 = usage,
         )
 
@@ -40,5 +43,6 @@ class AgentResponse:
             "appointment_saved":     self.appointment_saved,
             "complaint_reference":   self.complaint_reference,
             "appointment_reference": self.appointment_reference,
+            "form":                  self.form,
             "usage":                 self.usage,
         }

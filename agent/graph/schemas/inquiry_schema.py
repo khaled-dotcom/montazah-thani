@@ -5,7 +5,10 @@ class InquiryResponse(BaseModel):
 
     reply: str = Field(
         description=(
-            "Reply that will be sent to the citizen. "
+            "Reply that will be sent to the citizen, written in the SAME "
+            "language the citizen wrote in — English question, English "
+            "reply, including the labels. The knowledge base is Arabic, but "
+            "that is the language of the source, not of this field. "
             "Keep it short, clear, respectful, and suitable for chat. "
             "Avoid long paragraphs and unnecessary repetition."
         )

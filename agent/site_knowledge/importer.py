@@ -28,6 +28,7 @@ from knowledge.embedding import generate_embedding
 from knowledge.schemas import ApprovedKnowledge, EntityType, GeneratedKnowledge, VectorMetadata
 from knowledge.vector_store import upsert_vector
 from models.models import CityService, District, db
+from search.preprocess.normalize import normalize
 
 DEFAULT_FILE = os.path.join(os.path.dirname(__file__), "montazah-thani.json")
 
@@ -77,6 +78,55 @@ def _as_text_list(value: Any) -> str | None:
     return "، ".join(parts) or None
 
 
+# «حي» و«مدينة» بيوصفوا نوع الوحدة الإدارية، مش بيسمّوا المكان. الحي بيكتب
+# اسمه بيها والموقع بيكتبه من غيرها، فلو فضلت في المفتاح يبقى الاسمين
+# مختلفين وهما نفس المكان.
+_DISTRICT_PREFIXES = {"حي", "مدينه", "مدينة"}
+
+
+def _district_key(name: str) -> frozenset[str]:
+    """
+    The words that identify a district, as a set.
+
+    Word *order* cannot be part of the key: the governorate writes «حي المنتزه
+    ثان» and the site writes «ثان المنتزه», and those are one district. Nor can
+    the exact letters: «الثانية» and «ثان» differ, so the alias list carries
+    both spellings and any one of them matching is enough. `normalize` folds
+    the alef and teh-marbuta variants, and the unit prefix is dropped here.
+
+    Two real districts never collide under this: «العامرية أول» is {العامريه،
+    اول} and «العامرية ثان» is {العامريه، ثان}; «برج العرب» is {برج، العرب} and
+    «برج العرب الجديدة» carries {الجديده} on top.
+    """
+    return frozenset(
+        token for token in normalize(name).split() if token not in _DISTRICT_PREFIXES
+    )
+
+
+def _find_district(name: str, aliases: Iterable[str]) -> District | None:
+    """
+    Finds the row this export belongs to, by name first and then by alias.
+
+    Matching on the exact name alone is what put this district in the database
+    twice: `flask seed-districts` had already created it under the
+    governorate's name, the export arrived under the site's, and the import
+    made a second row — so the district had two identities, one holding the
+    services and one holding nothing, and a citizen could be routed to either.
+    """
+    exact = District.query.filter(District.name == name).first()
+    if exact:
+        return exact
+
+    keys = {_district_key(candidate) for candidate in (name, *aliases) if candidate}
+    keys.discard(frozenset())
+
+    for district in District.query.all():
+        if _district_key(district.name) in keys:
+            return district
+
+    return None
+
+
 def _upsert_district(record: dict) -> District:
     """
     Matches the district on its name and fills it from the site.
@@ -89,11 +139,15 @@ def _upsert_district(record: dict) -> District:
     if not name:
         raise ValueError("The export has no district name")
 
-    district = District.query.filter(District.name == name).first()
+    district = _find_district(name, record.get("aliases") or [])
 
     if district is None:
         district = District(name=name)
         db.session.add(district)
+    else:
+        # The site's own name for itself wins — it is what the district
+        # publishes and what the citizen reading the page will type.
+        district.name = name
 
     for column in ("zone", "address", "phone", "hotline", "email", "working_hours",
                    "coverage", "info"):

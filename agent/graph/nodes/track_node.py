@@ -18,6 +18,12 @@ from software_services.appointment_services import AppointmentService
 # أرقام المرجع: حرف نوع + 7 خانات من أبجدية بدون حروف متشابهة
 REFERENCE_PATTERN = re.compile(r"\b([CA][ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{7})\b", re.IGNORECASE)
 
+# «الشكل» بس، من غير تدقيق: كلمة فيها حروف وأرقام مع بعض بطول رقم مرجع.
+# ده مش بيدوّر على حاجة — ده بيجاوب على سؤال واحد: هو المواطن قال رقم
+# وهو فاكره رقم طلبه؟ لو أيوة، الرد لازم يبقى عن الرقم ده هو، حتى لو
+# الرقم غلط أو مش موجود.
+REFERENCE_SHAPED = re.compile(r"\b(?=[A-Z0-9]{5,14}\b)(?=[A-Z0-9]*[A-Z])(?=[A-Z0-9]*\d)[A-Z0-9]+\b", re.IGNORECASE)
+
 PHONE_PATTERN = re.compile(r"\b(01[0-9]{9})\b")
 
 
@@ -103,8 +109,20 @@ def _lookup(user_message: str, summary: str):
     Tries the reference number in the current message first, then any reference
     the citizen already got earlier in this conversation, then their phone.
     Returns a list of formatted blocks (possibly empty).
+
+    The moment the citizen quotes something reference-shaped, the summary stops
+    being consulted — even if what they quoted resolves to nothing. Reading on
+    into the conversation answers a question they did not ask: someone who
+    booked an appointment, then mistyped a complaint number, was shown that
+    appointment's status with nothing marking it as a different request, and
+    would reasonably read it as the answer. Better to say the number was not
+    found and let them check it.
+
+    The summary is still the right fallback for "إيه أخبار طلبي؟" with no
+    number in it at all.
     """
-    haystacks = [user_message, summary or ""]
+    quoted_one = bool(REFERENCE_SHAPED.search(user_message))
+    haystacks = [user_message] if quoted_one else [user_message, summary or ""]
 
     references = []
     for text in haystacks:
@@ -155,8 +173,13 @@ def track_node(state: AgentState) -> dict:
     if blocks:
         reply = "\n\n———\n\n".join(blocks)
 
-    elif REFERENCE_PATTERN.search(user_message) or PHONE_PATTERN.search(user_message):
-        # المواطن أدى رقم بس مش موجود في قاعدة البيانات
+    elif REFERENCE_SHAPED.search(user_message) or PHONE_PATTERN.search(user_message):
+        # المواطن أدى رقم بس مش موجود في قاعدة البيانات.
+        #
+        # الشكل هو المقياس هنا مش الصيغة الصحيحة: رقم فيه حرف غلط أو خانة
+        # ناقصة مش بيطابق صيغة المرجع أصلاً، وهو بالظبط الرقم اللي المواطن
+        # محتاج يتقاله «راجع الرقم» — مش رد عام بيطلب منه رقم هو فاكر إنه
+        # باعته خلاص.
         reply = detect_language_fallback(
             user_message,
             arabic=(

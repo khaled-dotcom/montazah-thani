@@ -32,13 +32,15 @@ class AgentState(TypedDict):
     # الحقول المتجمّعة في المسار المفتوح — المصدر الموثوق، مش الملخص
     draft: Optional[dict]
 
-    # هوية المواطن (اسم/رقم قومي/تليفون/إيميل) — بتعيش عبر كل المسارات
+    # هوية المواطن (اسم/رقم قومي/تليفون/إيميل) — بتعيش عبر كل المسارات،
+    # وبتستخدم في تعبئة الفورمات مقدمًا عشان المواطن ما يكتبهاش تاني
     identity: Optional[dict]
 
-    # الاسم + الرقم القومي + التليفون كلهم متسجلين؟ لو لأ، الرسالة
-    # بتروح لبوابة الاستقبال قبل أي حاجة
-    identity_complete: Optional[bool]
-    intake_complete: Optional[bool]
+    # ── forms ─────────────────────────────────────────────────────────────────
+    # وصف الفورم اللي المفروض يتعرض تحت الرد (حجز موعد / بلاغ)، أو None.
+    # الحقول والخيارات كلها جوّاه — الـ widget بيرسمه من غير ما يعرف
+    # حاجة عن المواعيد أو البلاغات. شكله في graph/forms.py
+    form: Optional[dict]
 
     # ── flags ─────────────────────────────────────────────────────────────────
     complaint_saved: Optional[bool]
@@ -59,5 +61,4 @@ class AgentState(TypedDict):
     inquiry_usage: Optional[dict]
     complaint_usage: Optional[dict]
     appointment_usage: Optional[dict]
-    intake_usage: Optional[dict]
     direct_usage: Optional[dict]

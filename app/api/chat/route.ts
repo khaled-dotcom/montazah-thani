@@ -114,6 +114,10 @@ export async function POST(request: Request) {
         intent: turn.intent,
         reference: turn.reference,
         ticketUrl: turn.ticketReference ? `/api/chat/ticket/${turn.ticketReference}` : null,
+        /* A booking or report form for the panel to draw under the reply.
+           Nothing is written until the citizen submits it, to
+           /api/chat/form. */
+        form: turn.form,
       });
     } catch (error) {
       // 429 is the assistant's own rate limit, and it is a real answer to the

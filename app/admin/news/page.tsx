@@ -44,7 +44,7 @@ export default async function AdminNewsPage({
           {/* ---------------------------------------------------------- form */}
           <form action={saveNews} className="card space-y-5 p-6">
             <h2 className="font-[family-name:--font-display] text-lg font-bold">
-              {editing ? `تعديل: ${editing.title.ar}` : 'خبر جديد'}
+              {editing ? `تعديل: ${editing.title?.ar ?? ''}` : 'خبر جديد'}
             </h2>
             {editing && <input type="hidden" name="id" value={editing.id} />}
 
@@ -53,8 +53,8 @@ export default async function AdminNewsPage({
               labelAr="العنوان (عربي)"
               labelEn="Title (English)"
               errors={errors}
-              valueAr={editing?.title.ar}
-              valueEn={editing?.title.en}
+              valueAr={editing?.title?.ar}
+              valueEn={editing?.title?.en}
             />
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -104,8 +104,8 @@ export default async function AdminNewsPage({
               labelEn="Short summary (English)"
               errors={errors}
               rows={2}
-              valueAr={editing?.summary.ar}
-              valueEn={editing?.summary.en}
+              valueAr={editing?.summary?.ar}
+              valueEn={editing?.summary?.en}
               hint="سطر أو سطران — يظهر في القوائم"
             />
 
@@ -115,8 +115,8 @@ export default async function AdminNewsPage({
               labelEn="Body (English)"
               errors={errors}
               rows={9}
-              valueAr={editing ? joinParagraphs(editing.body.ar) : ''}
-              valueEn={editing ? joinParagraphs(editing.body.en) : ''}
+              valueAr={editing?.body?.ar ? joinParagraphs(editing.body.ar) : ''}
+              valueEn={editing?.body?.en ? joinParagraphs(editing.body.en) : ''}
               hint="افصل بين الفقرات بسطر فارغ"
             />
 

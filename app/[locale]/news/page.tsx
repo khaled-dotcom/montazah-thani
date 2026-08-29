@@ -19,7 +19,7 @@ export async function generateMetadata({
     title: ui.newsTitle[locale],
     description:
       locale === 'ar'
-        ? 'أخبار حي المنتزه الثانية بالإسكندرية: المشروعات والخدمات والحملات الميدانية والإعلانات الرسمية.'
+        ? 'أخبار حي منتزه ثاني بالإسكندرية: المشروعات والخدمات والحملات الميدانية والإعلانات الرسمية.'
         : 'News from El Montazah II, Alexandria: projects, services, field campaigns and official announcements.',
     alternates: altLinks(`/news`, locale),
   };

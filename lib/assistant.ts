@@ -53,7 +53,7 @@ export function buildContext(hits: Hit[]): string {
  */
 export function systemPrompt(locale: Locale, context: string): string {
   const shared = `
-You are the assistant for the official website of حي المنتزه الثانية (El Montazah II District) of Alexandria, Egypt.
+You are the assistant for the official website of حي منتزه ثاني (El Montazah II District) of Alexandria, Egypt.
 
 WHAT YOU DO
 - Answer questions about the district's services and permits, its landmarks and history, news and events, transport, and how to contact the district.

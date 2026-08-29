@@ -18,7 +18,7 @@ export async function generateMetadata({
     title: ui.bookingTitle[locale],
     description:
       locale === 'ar'
-        ? 'احجز موعدًا مسبقًا في شبابيك حي المنتزه الثانية بالإسكندرية: اختر الغرض والمقر واليوم والوقت.'
+        ? 'احجز موعدًا مسبقًا في شبابيك حي منتزه ثاني بالإسكندرية: اختر الغرض والمقر واليوم والوقت.'
         : 'Book a counter appointment at the El Montazah II district offices: choose the purpose, office, day and time.',
     alternates: altLinks(`/appointments`, locale),
   };

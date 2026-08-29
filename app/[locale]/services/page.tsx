@@ -18,7 +18,7 @@ export async function generateMetadata({
     title: ui.servicesTitle[locale],
     description:
       locale === 'ar'
-        ? 'خدمات حي المنتزه الثانية بالإسكندرية: تراخيص البناء والمحال، الإشغالات، النظافة، الإنارة، الإبلاغ عن المشكلات، ودعم المشروعات.'
+        ? 'خدمات حي منتزه ثاني بالإسكندرية: تراخيص البناء والمحال، الإشغالات، النظافة، الإنارة، الإبلاغ عن المشكلات، ودعم المشروعات.'
         : 'El Montazah II district services: building and shop licences, occupancy, waste, lighting, issue reporting and enterprise support.',
     alternates: altLinks(`/services`, locale),
   };

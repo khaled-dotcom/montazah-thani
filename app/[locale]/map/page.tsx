@@ -29,7 +29,7 @@ export async function generateMetadata({
     title: ui.mapTitle[locale],
     description:
       locale === 'ar'
-        ? 'كيف تتنقل في حي المنتزه الثانية بالإسكندرية: قطار أبو قير والترام والميكروباص، ومسارات المشي، ومواقف السيارات.'
+        ? 'كيف تتنقل في حي منتزه ثاني بالإسكندرية: قطار أبو قير والترام والميكروباص، ومسارات المشي، ومواقف السيارات.'
         : 'Getting around El Montazah II, Alexandria: the Abu Qir train, tram, bus and microbus, walking trails and parking.',
     alternates: altLinks(`/map`, locale),
   };

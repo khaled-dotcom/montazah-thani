@@ -30,7 +30,7 @@ export const ui = {
   heroCtaExplore: { ar: 'اكتشف المعالم', en: 'Explore landmarks' },
   quickServices: { ar: 'الخدمات الأكثر طلبًا', en: 'Most requested services' },
   quickServicesNote: { ar: 'كل خدمة تعرض المستندات والخطوات والمدة قبل أن تتحرك من مكانك.', en: 'Every service lists its documents, steps and timescale before you set out.' },
-  discoverTitle: { ar: 'اكتشف حي المنتزه الثانية', en: 'Discover El Montazah II District' },
+  discoverTitle: { ar: 'اكتشف حي منتزه ثاني', en: 'Discover El Montazah II District' },
   discoverNote: { ar: 'من حدائق المنتزه وجسرها إلى رصيف أبي قير وجزيرته.', en: 'From the Montazah Gardens and their bridge to Abu Qir’s quay and its island.' },
   latestNews: { ar: 'آخر الأخبار', en: 'Latest news' },
   upcoming: { ar: 'الفعاليات القادمة', en: 'Upcoming events' },
@@ -262,7 +262,7 @@ export const ui = {
   // Chatbot
   chatOpen: { ar: 'افتح مساعد الحي', en: 'Open the district assistant' },
   chatClose: { ar: 'إغلاق المساعد', en: 'Close the assistant' },
-  chatTitle: { ar: 'مساعد حي المنتزه الثانية', en: 'El Montazah II assistant' },
+  chatTitle: { ar: 'مساعد حي منتزه ثاني', en: 'El Montazah II assistant' },
   chatSubtitle: { ar: 'يجيب عن الخدمات والمعالم والفعاليات', en: 'Answers on services, landmarks and events' },
   chatPlaceholder: { ar: 'اكتب سؤالك…', en: 'Type your question…' },
   chatSend: { ar: 'إرسال', en: 'Send' },
@@ -337,9 +337,9 @@ export const ui = {
     ar: 'الرابط الذي طلبته غير متاح. جرّب البحث أو ارجع إلى الصفحة الرئيسية.',
     en: 'The page you asked for is not available. Try searching, or return to the home page.',
   },
-  footerRights: { ar: 'حي المنتزه الثانية — محافظة الإسكندرية. جميع الحقوق محفوظة.', en: 'El Montazah II District — Alexandria Governorate. All rights reserved.' },
+  footerRights: { ar: 'حي منتزه ثاني — محافظة الإسكندرية. جميع الحقوق محفوظة.', en: 'El Montazah II District — Alexandria Governorate. All rights reserved.' },
   footerNote: {
-    ar: 'البوابة الرسمية لحي المنتزه الثانية — محافظة الإسكندرية. المحتوى يُحدَّث باستمرار من المصادر الرسمية للحي، والبيانات المعروضة خاضعة للاعتماد الرسمي عند مراجعة المقر.',
+    ar: 'البوابة الرسمية لحي منتزه ثاني — محافظة الإسكندرية. المحتوى يُحدَّث باستمرار من المصادر الرسمية للحي، والبيانات المعروضة خاضعة للاعتماد الرسمي عند مراجعة المقر.',
     en: 'The official portal of El Montazah II District — Alexandria Governorate. Content is continuously refreshed from the district’s official sources; figures shown are confirmed at the district offices when an application is filed.',
   },
 } satisfies Record<string, Bi>;

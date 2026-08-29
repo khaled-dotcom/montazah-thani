@@ -76,7 +76,7 @@ export const services: Service[] = [
       en: 'The permit required to build, extend, restore or structurally strengthen a property within the district.',
     },
     eligibility: {
-      ar: ['مالك العقار أو من يمثله بتوكيل رسمي', 'أن يكون العقار داخل النطاق الإداري لحي المنتزه الثانية', 'ألا يكون العقار محل نزاع قضائي على الملكية'],
+      ar: ['مالك العقار أو من يمثله بتوكيل رسمي', 'أن يكون العقار داخل النطاق الإداري لحي منتزه ثاني', 'ألا يكون العقار محل نزاع قضائي على الملكية'],
       en: ['The owner or a formally authorised representative', 'The property must fall within El Montazah II District boundary', 'The property must not be subject to an ownership dispute'],
     },
     documents: {
@@ -113,7 +113,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'تُحسب الرسوم وفق المساحة والغرض طبقًا للائحة المعمول بها — يُرجى التأكد من الشباك', en: 'Calculated by area and use under the applicable regulations — confirm at the counter' },
     duration: { ar: 'من 30 إلى 60 يوم عمل حسب اكتمال المستندات', en: '30–60 working days depending on document completeness' },
-    channel: { ar: 'مركز خدمة المواطنين — مقر حي المنتزه الثانية', en: 'Citizen service centre — El Montazah II District offices' },
+    channel: { ar: 'مركز خدمة المواطنين — مقر حي منتزه ثاني', en: 'Citizen service centre — El Montazah II District offices' },
     legal: ['building-119-2008', 'local-admin-43-1979'],
   },
   {
@@ -163,7 +163,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'يُقدَّر المقابل حسب الموقع والمساحة ونوع المخالفة بقرار من اللجنة', en: 'Assessed by the committee according to location, area and type of violation' },
     duration: { ar: 'حسب دور اللجنة وحجم الطلبات المعروضة', en: 'Depends on the committee’s schedule and caseload' },
-    channel: { ar: 'الإدارة الهندسية — مقر حي المنتزه الثانية', en: 'Engineering department — El Montazah II District offices' },
+    channel: { ar: 'الإدارة الهندسية — مقر حي منتزه ثاني', en: 'Engineering department — El Montazah II District offices' },
     legal: ['reconciliation-17-2019', 'building-119-2008'],
   },
   {
@@ -241,7 +241,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'الرفع الدوري ضمن رسم النظافة؛ رفع مخلفات البناء بمقابل يُحدَّد بالكمية', en: 'Regular collection is covered by the cleansing levy; debris removal is charged by volume' },
     duration: { ar: 'من 48 إلى 96 ساعة للطلبات الاستثنائية', en: '48–96 hours for extra collection requests' },
-    channel: { ar: 'إدارة النظافة — مقر حي المنتزه الثانية', en: 'Cleansing department — El Montazah II District offices' },
+    channel: { ar: 'إدارة النظافة — مقر حي منتزه ثاني', en: 'Cleansing department — El Montazah II District offices' },
     legal: ['waste-202-2020', 'local-bylaw'],
   },
   {
@@ -277,7 +277,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'مجاني', en: 'Free' },
     duration: { ar: 'من 3 إلى 7 أيام عمل، وأسرع في حالات الخطر', en: '3–7 working days; faster where there is a hazard' },
-    channel: { ar: 'إدارة الإنارة — مقر حي المنتزه الثانية', en: 'Lighting department — El Montazah II District offices' },
+    channel: { ar: 'إدارة الإنارة — مقر حي منتزه ثاني', en: 'Lighting department — El Montazah II District offices' },
     legal: ['local-admin-43-1979'],
   },
   {
@@ -313,7 +313,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'مجاني', en: 'Free' },
     duration: { ar: 'الإصلاحات العاجلة خلال أسبوع؛ أعمال الرصف حسب الخطة', en: 'Urgent repairs within a week; resurfacing according to the plan' },
-    channel: { ar: 'الإدارة الهندسية — مقر حي المنتزه الثانية', en: 'Engineering department — El Montazah II District offices' },
+    channel: { ar: 'الإدارة الهندسية — مقر حي منتزه ثاني', en: 'Engineering department — El Montazah II District offices' },
     legal: ['local-admin-43-1979', 'roads-140-1956'],
   },
   {
@@ -347,7 +347,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'رسوم رمزية وفق اللائحة', en: 'Nominal fees under the regulations' },
     duration: { ar: 'في اليوم ذاته عند اكتمال المستندات', en: 'Same day when documents are complete' },
-    channel: { ar: 'إدارة المقابر — مقر حي المنتزه الثانية', en: 'Cemeteries department — El Montazah II District offices' },
+    channel: { ar: 'إدارة المقابر — مقر حي منتزه ثاني', en: 'Cemeteries department — El Montazah II District offices' },
     legal: ['local-bylaw'],
   },
   {
@@ -398,7 +398,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'تختلف حسب النشاط والمساحة وفق اللائحة التنفيذية', en: 'Varies by activity and floor area under the executive regulations' },
     duration: { ar: 'المدة القانونية المقررة للبت في الطلب من تاريخ اكتمال المستندات', en: 'The statutory decision period from the date the file is complete' },
-    channel: { ar: 'مركز خدمات المستثمرين — مقر حي المنتزه الثانية', en: 'Investor services desk — El Montazah II District offices' },
+    channel: { ar: 'مركز خدمات المستثمرين — مقر حي منتزه ثاني', en: 'Investor services desk — El Montazah II District offices' },
     legal: ['shops-154-2019'],
   },
   {
@@ -434,7 +434,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'يُحسب بالمتر المربع وبمدة الإشغال وفق التعريفة المعتمدة', en: 'Charged per square metre and by duration under the approved tariff' },
     duration: { ar: 'من 7 إلى 15 يوم عمل', en: '7–15 working days' },
-    channel: { ar: 'إدارة الإشغالات — مقر حي المنتزه الثانية', en: 'Occupancy department — El Montazah II District offices' },
+    channel: { ar: 'إدارة الإشغالات — مقر حي منتزه ثاني', en: 'Occupancy department — El Montazah II District offices' },
     legal: ['roads-140-1956', 'local-bylaw'],
   },
   {
@@ -468,7 +468,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'رسم سنوي يُحسب بمساحة اللافتة وموقعها', en: 'An annual fee based on sign area and location' },
     duration: { ar: 'من 10 إلى 20 يوم عمل', en: '10–20 working days' },
-    channel: { ar: 'إدارة الإعلانات — مقر حي المنتزه الثانية', en: 'Advertising department — El Montazah II District offices' },
+    channel: { ar: 'إدارة الإعلانات — مقر حي منتزه ثاني', en: 'Advertising department — El Montazah II District offices' },
     legal: ['shops-154-2019', 'local-bylaw'],
   },
   {
@@ -502,7 +502,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'الإرشاد مجاني؛ وتخضع برامج التمويل لشروط الجهة المانحة', en: 'Advice is free; financing programmes follow the funder’s terms' },
     duration: { ar: 'موعد إرشادي خلال أسبوع', en: 'An advisory appointment within a week' },
-    channel: { ar: 'مركز خدمات المستثمرين — مقر حي المنتزه الثانية', en: 'Investor services desk — El Montazah II District offices' },
+    channel: { ar: 'مركز خدمات المستثمرين — مقر حي منتزه ثاني', en: 'Investor services desk — El Montazah II District offices' },
     legal: ['local-admin-43-1979'],
     external: {
       label: { ar: 'جهاز تنمية المشروعات المتوسطة والصغيرة ومتناهية الصغر', en: 'Micro, Small and Medium Enterprise Development Agency' },
@@ -608,7 +608,7 @@ export const services: Service[] = [
     },
     fee: { ar: 'تعريفة معلنة بالساعة في المواقف المنظمة', en: 'A posted hourly tariff in the organised car parks' },
     duration: { ar: 'فوري', en: 'Immediate' },
-    channel: { ar: 'إدارة المواقف — مقر حي المنتزه الثانية', en: 'Parking department — El Montazah II District offices' },
+    channel: { ar: 'إدارة المواقف — مقر حي منتزه ثاني', en: 'Parking department — El Montazah II District offices' },
     legal: ['traffic-66-1973', 'local-bylaw'],
   },
 ];

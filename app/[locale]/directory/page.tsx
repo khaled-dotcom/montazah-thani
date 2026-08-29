@@ -18,7 +18,7 @@ export async function generateMetadata({
     title: ui.directoryTitle[locale],
     description:
       locale === 'ar'
-        ? 'دليل المحال والخدمات في حي المنتزه الثانية بالإسكندرية: مطاعم ومقاهٍ، متاجر، إقامة، صحة، خدمات وحرف.'
+        ? 'دليل المحال والخدمات في حي منتزه ثاني بالإسكندرية: مطاعم ومقاهٍ، متاجر، إقامة، صحة، خدمات وحرف.'
         : 'A directory of shops and services in El Montazah II, Alexandria: food, retail, places to stay, health, services and crafts.',
     alternates: altLinks(`/directory`, locale),
   };

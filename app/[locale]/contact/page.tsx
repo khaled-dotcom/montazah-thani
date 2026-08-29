@@ -19,7 +19,7 @@ export async function generateMetadata({
     title: ui.contactTitle[locale],
     description:
       locale === 'ar'
-        ? 'اتصل بحي المنتزه الثانية بالإسكندرية: العنوان ومواعيد العمل وأرقام الطوارئ ونموذج المراسلة والإبلاغ.'
+        ? 'اتصل بحي منتزه ثاني بالإسكندرية: العنوان ومواعيد العمل وأرقام الطوارئ ونموذج المراسلة والإبلاغ.'
         : 'Contact El Montazah II District, Alexandria: address, working hours, emergency numbers and a message or reporting form.',
     alternates: altLinks(`/contact`, locale),
   };

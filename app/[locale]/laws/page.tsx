@@ -18,7 +18,7 @@ export async function generateMetadata({
     title: ui.lawsTitle[locale],
     description:
       locale === 'ar'
-        ? 'القوانين واللوائح التي تصدر بموجبها تراخيص وخدمات حي المنتزه الثانية بالإسكندرية، وأي خدمة ينظّمها كل قانون.'
+        ? 'القوانين واللوائح التي تصدر بموجبها تراخيص وخدمات حي منتزه ثاني بالإسكندرية، وأي خدمة ينظّمها كل قانون.'
         : 'The laws and regulations under which El Montazah II district permits and services are issued, and which service each one governs.',
     alternates: altLinks(`/laws`, locale),
   };

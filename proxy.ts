@@ -1,18 +1,21 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+import { ADMIN_SESSION_COOKIE, verifyAdminSession } from '@/lib/admin-session';
+
 /**
  * Gate on the staff dashboard.
  *
- * HTTP Basic, checked against ADMIN_USER / ADMIN_PASSWORD. That is deliberately
+ * A signed, HttpOnly session cookie set by the /admin/login form, keyed on
+ * ADMIN_PASSWORD — so there is exactly one secret to configure, and rotating
+ * the password invalidates every open session for free. That is deliberately
  * modest, and its limits should be understood before this carries real bookings:
  *
- *   - Basic sends the password on every request, base64-encoded, not hashed.
- *     Over plain HTTP that is the same as sending it in the clear, so the
- *     deployment MUST terminate TLS in front of this.
  *   - One shared account for the whole office means no audit trail: the list
  *     shows who booked, never which clerk cancelled it.
  *   - There is no lockout, so a weak password will eventually be guessed.
+ *   - The cookie is only as safe as the connection it travels over — the
+ *     deployment MUST terminate TLS in front of this (see docker/nginx).
  *
  * It is the right size for a district counter tool behind HTTPS, and the wrong
  * size the moment more than a handful of people need their own login. Replace
@@ -22,30 +25,7 @@ import type { NextRequest } from 'next/server';
  * rather than open.
  */
 
-/* Header values are Latin-1 only: an em dash or an Arabic letter here throws
-   before the 401 is ever sent, and the browser gets a 500 with no login prompt.
-   Keep this ASCII. */
-const REALM = 'Hay Montazah 2 staff';
-
-function unauthorized(message: string) {
-  return new NextResponse(message, {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': `Basic realm="${REALM}", charset="UTF-8"`,
-      'Content-Type': 'text/plain; charset=utf-8',
-    },
-  });
-}
-
-/** Compares without leaking length or position through timing. */
-function safeEqual(a: string, b: string): boolean {
-  const aBytes = new TextEncoder().encode(a);
-  const bBytes = new TextEncoder().encode(b);
-  if (aBytes.length !== bBytes.length) return false;
-  let diff = 0;
-  for (let i = 0; i < aBytes.length; i++) diff |= aBytes[i]! ^ bBytes[i]!;
-  return diff === 0;
-}
+const LOGIN_PATH = '/admin/login';
 
 export function proxy(request: NextRequest) {
   const user = process.env.ADMIN_USER;
@@ -59,24 +39,18 @@ export function proxy(request: NextRequest) {
     );
   }
 
-  const header = request.headers.get('authorization');
-  if (!header?.startsWith('Basic ')) return unauthorized('Authentication required');
+  const { pathname } = request.nextUrl;
 
-  let decoded: string;
-  try {
-    decoded = atob(header.slice(6));
-  } catch {
-    return unauthorized('Malformed credentials');
+  // The login page (and the POST the form makes to it) must stay reachable
+  // without a session, or nobody could ever sign in.
+  if (pathname === LOGIN_PATH) return NextResponse.next();
+
+  const session = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  if (!verifyAdminSession(session, password)) {
+    const url = new URL(LOGIN_PATH, request.url);
+    url.searchParams.set('next', pathname);
+    return NextResponse.redirect(url);
   }
-
-  // Only the first colon separates them; a password may contain more.
-  const separator = decoded.indexOf(':');
-  const givenUser = separator === -1 ? decoded : decoded.slice(0, separator);
-  const givenPassword = separator === -1 ? '' : decoded.slice(separator + 1);
-
-  // Both compared every time, so a wrong username costs the same as a wrong password.
-  const ok = safeEqual(givenUser, user) === true && safeEqual(givenPassword, password) === true;
-  if (!ok) return unauthorized('Invalid credentials');
 
   // Staff pages list residents' names and phone numbers. Keep them out of
   // caches and out of search engines.

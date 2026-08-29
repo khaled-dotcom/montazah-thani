@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# حي المنتزه الثانية — the whole system
+# حي منتزه ثاني — the whole system
 #
 #   nginx    TLS termination and the only thing exposed to the internet
 #   certbot  gets and renews the certificate
@@ -83,7 +83,7 @@ services:
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
       EMBEDDING_CACHE_DIR: /app/.embedding_cache
       # --- identity
-      ORG_NAME: ${ORG_NAME:-حي المنتزه الثانية — محافظة الإسكندرية}
+      ORG_NAME: ${ORG_NAME:-حي منتزه ثاني — محافظة الإسكندرية}
       ORG_SHORT: ${ORG_SHORT:-خدمة المواطن}
       ORG_NAME_EN: ${ORG_NAME_EN:-El Montazah II District, Alexandria}
       # --- hardening

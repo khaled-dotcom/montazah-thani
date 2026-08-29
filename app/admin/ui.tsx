@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { logout } from './login/actions';
+
 /** Small shared pieces for the staff screens. Arabic only — this is a counter tool. */
 
 export function AdminNav({
@@ -18,21 +20,31 @@ export function AdminNav({
 
   return (
     <nav aria-label="أقسام اللوحة" className="border-b border-line bg-surface">
-      <div className="page-width flex flex-wrap gap-1 py-2">
-        {items.map((item) => (
-          <Link
-            key={item.id}
-            href={item.href}
-            aria-current={current === item.id ? 'page' : undefined}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-              current === item.id
-                ? 'bg-brand text-brand-fg'
-                : 'text-fg-muted hover:bg-surface-2 hover:text-fg'
-            }`}
+      <div className="page-width flex flex-wrap items-center justify-between gap-1 py-2">
+        <div className="flex flex-wrap gap-1">
+          {items.map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              aria-current={current === item.id ? 'page' : undefined}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                current === item.id
+                  ? 'bg-brand text-brand-fg'
+                  : 'text-fg-muted hover:bg-surface-2 hover:text-fg'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+        <form action={logout}>
+          <button
+            type="submit"
+            className="rounded-lg px-3 py-2 text-sm font-semibold text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
           >
-            {item.label}
-          </Link>
-        ))}
+            خروج
+          </button>
+        </form>
       </div>
     </nav>
   );

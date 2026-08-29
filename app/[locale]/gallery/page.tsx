@@ -25,7 +25,7 @@ export async function generateMetadata({
     title: ui.galleryTitle[locale],
     description:
       locale === 'ar'
-        ? 'معرض بصري لمعالم حي المنتزه الثانية بالإسكندرية.'
+        ? 'معرض بصري لمعالم حي منتزه ثاني بالإسكندرية.'
         : 'A visual gallery of the landmarks of El Montazah II, Alexandria.',
     alternates: altLinks(`/gallery`, locale),
   };

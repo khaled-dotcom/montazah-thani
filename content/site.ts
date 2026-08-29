@@ -7,9 +7,9 @@ import type { Bi } from '@/lib/i18n';
  * the district has no separate one.
  */
 export const site = {
-  name: { ar: 'حي المنتزه الثانية', en: 'El Montazah II District' } as Bi,
+  name: { ar: 'حي منتزه ثاني', en: 'El Montazah II District' } as Bi,
   longName: {
-    ar: 'حي المنتزه الثانية — محافظة الإسكندرية',
+    ar: 'حي منتزه ثاني — محافظة الإسكندرية',
     en: 'El Montazah II District — Alexandria Governorate',
   } as Bi,
   tagline: {
@@ -17,7 +17,7 @@ export const site = {
     en: 'Alexandria’s north-east: royal gardens, beaches and fishing shores',
   } as Bi,
   description: {
-    ar: 'البوابة الرسمية لحي المنتزه الثانية بالإسكندرية: الخدمات والتراخيص، المعالم والحدائق الملكية، الأخبار والفعاليات، ودليل المنطقة.',
+    ar: 'البوابة الرسمية لحي منتزه ثاني بالإسكندرية: الخدمات والتراخيص، المعالم والحدائق الملكية، الأخبار والفعاليات، ودليل المنطقة.',
     en: 'The official gateway to Alexandria’s El Montazah II District: services and permits, landmarks and the royal gardens, news and events, and a local directory.',
   } as Bi,
   address: {
@@ -66,7 +66,7 @@ export const visionMission = {
     label: { ar: 'رؤية الحي', en: 'Our vision' } as Bi,
     icon: 'compass' as const,
     text: {
-      ar: 'أن يكون حي المنتزه الثانية نموذجًا للخدمة المحلية على الشمال الشرقي للإسكندرية: شواطئ نظيفة، وحدائق محفوظة، وخدمات تصل إلى أهل طوسون وأبي قير والمعمورة وخورشيد حيثما كانوا.',
+      ar: 'أن يكون حي منتزه ثاني نموذجًا للخدمة المحلية على الشمال الشرقي للإسكندرية: شواطئ نظيفة، وحدائق محفوظة، وخدمات تصل إلى أهل طوسون وأبي قير والمعمورة وخورشيد حيثما كانوا.',
       en: 'For El Montazah II to be the model of local service across Alexandria’s north-east: clean beaches, kept gardens, and services that reach the people of Toussoun, Abu Qir, Maamoura and Khourshid wherever they live.',
     } as Bi,
   },
@@ -100,6 +100,15 @@ export type GovLink = {
 };
 
 export const govLinks: GovLink[] = [
+  {
+    key: 'districts-portal',
+    href: process.env.NEXT_PUBLIC_DISTRICTS_PORTAL_URL ?? 'http://localhost:3200',
+    label: { ar: 'أحياء محافظة الإسكندرية', en: 'Alexandria Governorate districts' },
+    note: {
+      ar: 'دليل مواقع الأحياء الإلكترونية — كل حي وموقعه الرسمي',
+      en: 'The districts’ official sites, one directory',
+    },
+  },
   {
     key: 'lgs',
     href: 'https://lgs.gov.eg/#/home',

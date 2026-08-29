@@ -25,7 +25,7 @@ export async function generateMetadata({
     title: ui.landmarksTitle[locale],
     description:
       locale === 'ar'
-        ? 'دليل معالم حي المنتزه الثانية بالإسكندرية: حدائق وقصور المنتزه، مصايف المعمورة، خليج أبو قير وجزيرة نيلسون.'
+        ? 'دليل معالم حي منتزه ثاني بالإسكندرية: حدائق وقصور المنتزه، مصايف المعمورة، خليج أبو قير وجزيرة نيلسون.'
         : 'A guide to the landmarks of El Montazah II, Alexandria: the Montazah Gardens and palaces, the Maamoura shores, Abu Qir Bay and Nelson’s Island.',
     alternates: altLinks(`/landmarks`, locale),
   };

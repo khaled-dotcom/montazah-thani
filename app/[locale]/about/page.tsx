@@ -18,7 +18,7 @@ export async function generateMetadata({
     title: locale === 'ar' ? 'عن الحي — التاريخ والهوية' : 'About the district — history and identity',
     description:
       locale === 'ar'
-        ? 'تاريخ حي المنتزه الثانية بالإسكندرية وهويته: من كانوبوس القديمة ومعركة أبي قير إلى حدائق المنتزه ومصايف المعمورة، ومناطقه الست الرئيسية.'
+        ? 'تاريخ حي منتزه ثاني بالإسكندرية وهويته: من كانوبوس القديمة ومعركة أبي قير إلى حدائق المنتزه ومصايف المعمورة، ومناطقه الست الرئيسية.'
         : 'The history and identity of El Montazah II, Alexandria: from ancient Canopus and the Battle of the Nile to the Montazah Gardens and the Maamoura shores, and its six principal areas.',
     alternates: altLinks(`/about`, locale),
   };
@@ -36,7 +36,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
         title={locale === 'ar' ? 'الشمال الشرقي للإسكندرية' : 'Alexandria’s north-eastern shore'}
         lead={
           locale === 'ar'
-            ? 'حي المنتزه الثانية ليس ضاحية سكنية فقط، بل شريط كامل من تاريخ المدينة: حدائق ملكية على البحر، وخليج حمل اسم معركة غيّرت مصر، ومصايف تعرفها أجيال الإسكندرية.'
+            ? 'حي منتزه ثاني ليس ضاحية سكنية فقط، بل شريط كامل من تاريخ المدينة: حدائق ملكية على البحر، وخليج حمل اسم معركة غيّرت مصر، ومصايف تعرفها أجيال الإسكندرية.'
             : 'El Montazah II is more than a residential quarter — it is a whole strip of the city’s story: royal gardens on the sea, a bay that carries the name of a battle that changed Egypt, and bathing shores Alexandria’s families have known for generations.'
         }
       />

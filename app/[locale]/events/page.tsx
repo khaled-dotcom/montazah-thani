@@ -24,7 +24,7 @@ export async function generateMetadata({
     title: ui.eventsTitle[locale],
     description:
       locale === 'ar'
-        ? 'الفعاليات والمواسم في حي المنتزه الثانية بالإسكندرية: موسم المصايف، وأمسيات الحدائق، والأنشطة المجتمعية.'
+        ? 'الفعاليات والمواسم في حي منتزه ثاني بالإسكندرية: موسم المصايف، وأمسيات الحدائق، والأنشطة المجتمعية.'
         : 'Events and seasons in El Montazah II, Alexandria: the beach season, garden evenings and community activities.',
     alternates: altLinks(`/events`, locale),
   };

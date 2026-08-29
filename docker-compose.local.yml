@@ -48,7 +48,7 @@ services:
       GROQ_MAX_RETRIES: "1"
       EMBEDDING_MODEL: intfloat/multilingual-e5-large
       EMBEDDING_CACHE_DIR: /app/.embedding_cache
-      ORG_NAME: "حي المنتزه الثانية — محافظة الإسكندرية"
+      ORG_NAME: "حي منتزه ثاني — محافظة الإسكندرية"
       ORG_SHORT: "خدمة المواطن"
       ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000,*"
       CHAT_RATE_LIMIT: "60"

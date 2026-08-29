@@ -226,7 +226,7 @@ export const scenes: Scene[] = [
     width: 2400,
     height: 1576,
     title: { ar: 'قصر المنتزه والبحر', en: 'Montazah Palace and the sea' },
-    where: { ar: 'حدائق المنتزه — حي المنتزه الثانية', en: 'The Montazah Gardens — El Montazah II District' },
+    where: { ar: 'حدائق المنتزه — حي منتزه ثاني', en: 'The Montazah Gardens — El Montazah II District' },
     alt: {
       ar: 'قصر الحرمليك يرتفع خلف أمواج البحر المتوسط على طرف حدائق المنتزه',
       en: 'Haramlik Palace rising behind Mediterranean waves at the seaward end of the Montazah Gardens',
@@ -244,7 +244,7 @@ export const scenes: Scene[] = [
     width: 1600,
     height: 829,
     title: { ar: 'جسر جزيرة المنتزه', en: 'The Montazah island bridge' },
-    where: { ar: 'حدائق المنتزه — حي المنتزه الثانية', en: 'The Montazah Gardens — El Montazah II District' },
+    where: { ar: 'حدائق المنتزه — حي منتزه ثاني', en: 'The Montazah Gardens — El Montazah II District' },
     alt: {
       ar: 'أمواج تعبر أسفل قناة جسر الجزيرة بحجارته المقوسة',
       en: 'Waves passing beneath the arched stone channel of the island bridge',
@@ -262,7 +262,7 @@ export const scenes: Scene[] = [
     width: 1600,
     height: 1200,
     title: { ar: 'منارة المنتزه', en: 'The Montazah lighthouse' },
-    where: { ar: 'طرف الحدائق البحري — حي المنتزه الثانية', en: 'The gardens’ seaward end — El Montazah II District' },
+    where: { ar: 'طرف الحدائق البحري — حي منتزه ثاني', en: 'The gardens’ seaward end — El Montazah II District' },
     alt: {
       ar: 'منارة المنتزه البيضاء ذات الأشرطة الحمراء بين أشجار الحدائق',
       en: 'The white Montazah lighthouse with its red bands among the trees of the gardens',

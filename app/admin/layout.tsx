@@ -18,7 +18,7 @@ const body = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: 'لوحة الموظفين — حي المنتزه الثانية',
+  title: 'لوحة الموظفين — حي منتزه ثاني',
   // Belt and braces with the header the proxy sets.
   robots: { index: false, follow: false },
 };
@@ -36,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <header className="border-b border-line bg-sea-800 text-sand-100">
           <div className="page-width flex flex-wrap items-center justify-between gap-3 py-3">
             <p className="font-[family-name:--font-display] font-bold">
-              حي المنتزه الثانية — لوحة الموظفين
+              حي منتزه ثاني — لوحة الموظفين
             </p>
             <p className="text-xs opacity-80">بيانات المواطنين: للاستخدام الرسمي فقط</p>
           </div>

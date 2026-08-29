@@ -37,11 +37,27 @@ import { laws } from '@/content/legal';
 import { sections, site } from '@/content/site';
 import { transportModes } from '@/content/transport';
 
-/* `npm run` always sets this from package.json's own "name" field, which the
-   production audit verified is unique and correct per district — so the
-   output filename tracks it with no per-district edit required. */
-const SLUG = process.env.npm_package_name || 'site';
-const OUT = path.join(process.cwd(), 'agent', 'site_knowledge', `${SLUG}.json`);
+/**
+ * The output filename tracks whatever this district already committed to —
+ * docker-compose.yml mounts one exact `agent/site_knowledge/<slug>.json` by
+ * name, and `agent/site_knowledge/importer.py`'s default and
+ * `scripts/preflight.mjs`'s existence check both hardcode that same name. A
+ * district's package.json name does not always match that slug (the two are
+ * chosen independently), so re-deriving the filename from package.json on
+ * every run would silently write a second, unmounted file next to the real
+ * one instead of updating it.
+ *
+ * So: reuse whatever single .json file is already in that folder, and only
+ * fall back to package.json's name — matching npm's own `npm_package_name`
+ * env var — for a district exporting for the very first time.
+ */
+const KNOWLEDGE_DIR = path.join(process.cwd(), 'agent', 'site_knowledge');
+const existing = fs.existsSync(KNOWLEDGE_DIR)
+  ? fs.readdirSync(KNOWLEDGE_DIR).filter((name) => name.endsWith('.json'))
+  : [];
+const SLUG =
+  existing.length === 1 ? existing[0].replace(/\.json$/, '') : process.env.npm_package_name || 'site';
+const OUT = path.join(KNOWLEDGE_DIR, `${SLUG}.json`);
 
 /** The district's row in the assistant's database is matched on this name —
     fuzzily, on the words that name the place (see agent/seed_data.py's

@@ -54,7 +54,7 @@ services:
       CHAT_RATE_LIMIT: "60"
       SECURE_COOKIES: "0"
       TRUST_PROXY: "0"
-      PORT: "5000"
+      PORT: "4500"
       SMTP_SERVER: smtp.gmail.com
       SMTP_PORT: "465"
       NOTIFICATION_EMAIL_SENDER: ${NOTIFICATION_EMAIL_SENDER:-}
@@ -62,7 +62,7 @@ services:
       NOTIFICATION_EMAIL_RECEIVERS: ${NOTIFICATION_EMAIL_RECEIVERS:-}
       SERVER_IDENTIFIER: montazah-local-agent
     ports:
-      - "5000:5000"
+      - "4500:4500"
     volumes:
       - agent-uploads-local:/app/static/uploads
       - embedding-cache-local:/app/.embedding_cache
@@ -86,8 +86,8 @@ services:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/montazah_site
       ADMIN_USER: admin
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set in .env}
-      AGENT_URL: http://agent:5000
-      AGENT_DISTRICT_ID: "12"
+      AGENT_URL: http://agent:4500
+      AGENT_DISTRICT_ID: "2"
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     ports:
       - "3000:3000"

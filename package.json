@@ -2,7 +2,7 @@
   "name": "montazah-thani",
   "version": "0.1.0",
   "private": true,
-  "description": "الموقع الرسمي لحي المنتزه الثانية - الإسكندرية | Official website of El Montazah II District, Alexandria",
+  "description": "الموقع الرسمي لحي منتزه ثاني - الإسكندرية | Official website of El Montazah II District, Alexandria",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -16,7 +16,8 @@
     "test": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/alias-hook-register.mjs --test \"lib/**/*.test.ts\"",
     "test:watch": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/alias-hook-register.mjs --test --watch \"lib/**/*.test.ts\"",
     "preflight:build": "node scripts/preflight.mjs --scope=build",
-    "preflight:runtime": "node scripts/preflight.mjs --scope=runtime"
+    "preflight:runtime": "node scripts/preflight.mjs --scope=runtime",
+    "knowledge:export": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/alias-hook-register.mjs scripts/export-knowledge.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

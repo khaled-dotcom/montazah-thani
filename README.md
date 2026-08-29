@@ -1,4 +1,4 @@
-# حي المنتزه الثانية — El Montazah II District
+# حي منتزه ثاني — El Montazah II District
 
 ---
 
@@ -56,7 +56,7 @@ Then open `.env` and set the rest by hand:
 | `GROQ_API_KEY` | From <https://console.groq.com/keys>. Goes in **both** `.env` and `agent/.env`. |
 | `ORG_NAME` | The district's name as citizens should see it in the assistant's replies. |
 | `ALLOWED_ORIGINS` | The site's own origin. Never leave `*` in production. |
-| `NGINX_CONF` | `http-only.conf` before TLS is issued, `default.conf` after. |
+| `NGINX_CONF` | `http-only.conf` before TLS is issued, `https.conf` after. |
 | `TS_AUTHKEY` | Only if you publish through Tailscale — generate a fresh key per host. |
 
 `agent/.env` additionally takes the SMTP account used to notify departments and
@@ -103,7 +103,7 @@ reach no department:
 DISTRICT_ID=$(docker compose exec -T agent python -c \
   "from app import app; from models.models import District; \
    app.app_context().push(); \
-   print(District.query.filter(District.name.like('%المنتزه الثانية%')).first().id)")
+   print(District.query.filter(District.name.like('%منتزه ثاني%')).first().id)")
 
 sed -i "s|^AGENT_DISTRICT_ID=.*|AGENT_DISTRICT_ID=$DISTRICT_ID|" .env
 docker compose up -d web
@@ -160,7 +160,7 @@ docker compose logs nginx  --tail=50
 
 ---
 
-The official bilingual (Arabic-first, RTL) portal of **حي المنتزه الثانية**, the
+The official bilingual (Arabic-first, RTL) portal of **حي منتزه ثاني**, the
 El Montazah II District of Alexandria Governorate, Egypt — the city's
 north-eastern shore: the royal Montazah Gardens and palaces, the Maamoura
 bathing shores, the fishing village of Abu Qir and its historic bay.
@@ -545,8 +545,8 @@ docker compose up -d --build          # nginx + site + assistant + database
 nginx is the only service with a host port. It loads one config chosen by
 `NGINX_CONF`: `http-only.conf` to bootstrap and let certbot answer its first
 challenge, then `https.conf` for production. **Do not leave the public site on
-`http-only.conf`** — `/admin` uses HTTP Basic and sends its password on every
-request.
+`http-only.conf`** — `/admin` signs in with a password form and carries a
+session cookie, which travels in the clear on plain HTTP.
 
 Site alone, against an existing Postgres:
 

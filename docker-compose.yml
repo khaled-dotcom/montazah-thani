@@ -243,7 +243,11 @@ networks:
 volumes:
   pgdata:
   agent-uploads:
+  # Shared across every district's stack on this host — the ~2.2GB embedding
+  # model is identical regardless of district, so one download serves all.
   embedding-cache:
+    external: true
+    name: shared-embedding-cache
   certbot-conf:
   certbot-www:
   nginx-logs:
